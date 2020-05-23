@@ -4,7 +4,8 @@
   "description": "A fire-from-the-hip attempt at making a Discord bot",
   "main": "app.js",
   "scripts": {
-    "start": "node ./app.js"
+    "start:dev": "cross-env STAGE=dev node ./app.js",
+    "start": "cross-env STAGE=prod node ./app.js"
   },
   "repository": {
     "type": "git",
@@ -17,6 +18,10 @@
   },
   "homepage": "https://github.com/JakeKo/mega-bot#readme",
   "dependencies": {
-    "discord.js": "^12.2.0"
+    "discord.js": "^12.2.0",
+    "mongodb": "^3.5.7"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.2"
   }
 }
