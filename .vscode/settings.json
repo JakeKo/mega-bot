@@ -1,0 +1,8 @@
+{
+    "appService.zipIgnorePattern": [
+        "node_modules{,/**}",
+        ".vscode{,/**}"
+    ],
+    "appService.defaultWebAppToDeploy": "/subscriptions/57e27d48-7c13-461b-b4e8-78870b74eda2/resourceGroups/chat-bots/providers/Microsoft.Web/sites/discord-mega-bot",
+    "appService.deploySubpath": ""
+}

@@ -1,0 +1,22 @@
+{
+  "name": "mega-bot",
+  "version": "1.0.0",
+  "description": "A fire-from-the-hip attempt at making a Discord bot",
+  "main": "app.js",
+  "scripts": {
+    "start": "node ./app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JakeKo/mega-bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JakeKo/mega-bot/issues"
+  },
+  "homepage": "https://github.com/JakeKo/mega-bot#readme",
+  "dependencies": {
+    "discord.js": "^12.2.0"
+  }
+}
