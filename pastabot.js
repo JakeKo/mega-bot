@@ -1,6 +1,7 @@
 module.exports = store => async message => {
     const keys = (await store.getPastas()).map(pasta => pasta.key);
     const pastaAdd = /^!pasta\s+add\s+([0-9a-zA-Z\-_]+)\s+(.+)/;
+    const pastaHelp = /^!pasta\s+help/;
     const pastaRemove = /^!pasta\s+remove\s+([0-9a-zA-Z\-_]+)/;
     const pastaKeys = /^!pasta\s+keys/;
     const pastaSearch = /^!pasta\s+([0-9a-zA-Z\-_]+)/;
@@ -28,6 +29,18 @@ module.exports = store => async message => {
             await store.addPasta(key, value);
             message.channel.send(`Added new pasta: **${key}**. Type \`!pasta ${key}\` to share it with the channel.`);
         }
+    }
+
+    // Check if the message matches '!pasta help'
+    else if (pastaHelp.test(message.content)) {
+        message.channel.send([
+            '**Usage Intstructions for PastaBot:**',
+            '• `!pasta help`: View usage instructions.',
+            '• `!pasta keys`: View keys to currently available pastas.',
+            '• `!pasta [key]`: View pasta corresponding to the provided key.',
+            '• `!pasta add [key] [value]`: Create pasta with the provided key and value.',
+            '• `!pasta remove [key]: Remove pasta with the provided key.',
+        ].join('\n'));
     }
 
     // Check if the message matches '!pasta remove [key]'
