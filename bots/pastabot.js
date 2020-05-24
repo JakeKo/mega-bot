@@ -1,4 +1,4 @@
-module.exports = store => async message => {
+module.exports = (_, store) => async message => {
     const keys = (await store.getPastas()).map(pasta => pasta.key);
     const pastaAdd = /^!pasta\s+add\s+([0-9a-zA-Z\-_]+)\s+(.+)/;
     const pastaHelp = /^!pasta\s+help/;
