@@ -18,10 +18,8 @@
   },
   "homepage": "https://github.com/JakeKo/mega-bot#readme",
   "dependencies": {
+    "cross-env": "^7.0.2",
     "discord.js": "^12.2.0",
     "mongodb": "^3.5.7"
-  },
-  "devDependencies": {
-    "cross-env": "^7.0.2"
   }
 }

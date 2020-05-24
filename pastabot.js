@@ -39,7 +39,7 @@ module.exports = store => async message => {
             '• `!pasta keys`: View keys to currently available pastas.',
             '• `!pasta [key]`: View pasta corresponding to the provided key.',
             '• `!pasta add [key] [value]`: Create pasta with the provided key and value.',
-            '• `!pasta remove [key]: Remove pasta with the provided key.',
+            '• `!pasta remove [key]`: Remove pasta with the provided key.',
         ].join('\n'));
     }
 
