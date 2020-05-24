@@ -5,13 +5,14 @@ module.exports = store => async message => {
     const pastaRemove = /^!pasta\s+remove\s+([0-9a-zA-Z\-_]+)/;
     const pastaKeys = /^!pasta\s+keys/;
     const pastaSearch = /^!pasta\s+([0-9a-zA-Z\-_]+)/;
+    const keywords = ['add', 'help', 'remove', 'keys'];
 
     // Check if the message matches '!pasta add [key] [value]'
     if (pastaAdd.test(message.content)) {
         const [_, key, value] = message.content.match(pastaAdd);
 
         // Check if the key is a reserved keyword
-        if (key === 'keys' || key === 'add') {
+        if (keywords.includes(key)) {
             message.channel.send(`Cannot add pasta. The provided key is a reserved keyword: **${key}**.`);
         }
 
