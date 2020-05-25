@@ -1,10 +1,10 @@
 module.exports = (_, store) => async message => {
     const keys = (await store.getPastas()).map(pasta => pasta.key);
-    const pastaAdd = /^!pasta\s+add\s+([0-9a-zA-Z\-_]+)\s*(.*)/;
-    const pastaHelp = /^!pasta\s+help/;
-    const pastaRemove = /^!pasta\s+remove\s+([0-9a-zA-Z\-_]+)/;
-    const pastaList = /^!pasta\s+list/;
-    const pastaSearch = /^!pasta\s+([0-9a-zA-Z\-_]+)/;
+    const pastaAdd = /^!pasta +add +([0-9a-zA-Z\-_]+) *(.*)/;
+    const pastaHelp = /^!pasta +help/;
+    const pastaRemove = /^!pasta +remove +([0-9a-zA-Z\-_]+)/;
+    const pastaList = /^!pasta +list/;
+    const pastaSearch = /^!pasta +([0-9a-zA-Z\-_]+)([0-9a-zA-Z\-_\| ]*)/;
     const keywords = ['add', 'help', 'remove', 'list'];
 
     // Check if the message matches '!pasta add [key] [value]'
@@ -71,12 +71,20 @@ module.exports = (_, store) => async message => {
 
     // Check if the message matches '!pasta [key]'
     else if (pastaSearch.test(message.content)) {
-        const [_, key] = message.content.match(pastaSearch);
+        const [_, key, argsString] = message.content.match(pastaSearch);
 
         // Display the pasta corresponding to the provided key if one exists
         if (keys.includes(key)) {
             const pasta = await store.getPasta(key);
-            message.channel.send(pasta.value, { files: pasta.attachments || [] });
+
+            // I am proud and scared of what I have done here
+            const expectedArgMatches = [...pasta.value.matchAll(/\| *(\S+) *\|/g)];
+            const providedArgMatches = [...argsString.matchAll(/\| *(\S+)([^\|]+)/g)];
+            const expectedArgs = expectedArgMatches.map(match => match[1]);
+            const providedArgs = providedArgMatches.reduce((params, match) => ({ ...params, [match[1]]: match[2].trim() }), {});
+
+            const value = expectedArgs.reduce((output, arg) => output.replace(new RegExp(`\\| *${arg} *\\|`, 'g'), providedArgs[arg]), pasta.value);
+            message.channel.send(value, { files: pasta.attachments || [] });
         } else {
             message.channel.send(`Could not find a pasta matching the key: **${key}**. Try typing \`!pasta list\` to see the available keys or \`!pasta add\` to add a new pasta.`);
         }
