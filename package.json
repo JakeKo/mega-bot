@@ -4,8 +4,8 @@
   "description": "A fire-from-the-hip attempt at making a Discord bot",
   "main": "app.js",
   "scripts": {
-    "dev": "cross-env STAGE=DEV node ./app.js",
-    "prod": "cross-env STAGE=PROD node ./app.js",
+    "dev": "cross-env NODE_ENV=development node ./app.js",
+    "prod": "cross-env NODE_ENV=production node ./app.js",
     "start": "npm run prod"
   },
   "repository": {
