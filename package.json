@@ -4,14 +4,15 @@
   "description": "A fire-from-the-hip attempt at making a Discord bot",
   "main": "app.js",
   "scripts": {
-    "start:dev": "cross-env STAGE=dev node ./app.js",
-    "start": "cross-env STAGE=prod node ./app.js"
+    "dev": "cross-env STAGE=DEV node ./app.js",
+    "prod": "cross-env STAGE=PROD node ./app.js",
+    "start": "npm run prod"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/JakeKo/mega-bot.git"
   },
-  "author": "",
+  "author": "Jake Koperski",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/JakeKo/mega-bot/issues"
