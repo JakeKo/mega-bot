@@ -3,9 +3,9 @@ module.exports = (_, store) => async message => {
     const pastaAdd = /^!pasta\s+add\s+([0-9a-zA-Z\-_]+)\s+(.+)/;
     const pastaHelp = /^!pasta\s+help/;
     const pastaRemove = /^!pasta\s+remove\s+([0-9a-zA-Z\-_]+)/;
-    const pastaKeys = /^!pasta\s+keys/;
+    const pastaList = /^!pasta\s+list/;
     const pastaSearch = /^!pasta\s+([0-9a-zA-Z\-_]+)/;
-    const keywords = ['add', 'help', 'remove', 'keys'];
+    const keywords = ['add', 'help', 'remove', 'list'];
 
     // Check if the message matches '!pasta add [key] [value]'
     if (pastaAdd.test(message.content)) {
@@ -35,9 +35,9 @@ module.exports = (_, store) => async message => {
     // Check if the message matches '!pasta help'
     else if (pastaHelp.test(message.content)) {
         message.channel.send([
-            '**Usage Intstructions for PastaBot:**',
-            '• `!pasta help`: View usage instructions.',
-            '• `!pasta keys`: View keys to currently available pastas.',
+            '**Usage Intstructions for Pasta Bot:**',
+            '• `!pasta help`: View usage instructions for Pasta Bot.',
+            '• `!pasta list`: View list of currently available pastas.',
             '• `!pasta [key]`: View pasta corresponding to the provided key.',
             '• `!pasta add [key] [value]`: Create pasta with the provided key and value.',
             '• `!pasta remove [key]`: Remove pasta with the provided key.',
@@ -53,13 +53,14 @@ module.exports = (_, store) => async message => {
             await store.removePasta(key);
             message.channel.send(`Removed pasta: **${key}**`);
         } else {
-            message.channel.send(`Could not find a pasta matching the key: **${key}**. Try typing \`!pasta keys\` to see the available keys.`);
+            message.channel.send(`Could not find a pasta matching the key: **${key}**. Try typing \`!pasta list\` to see the available keys.`);
         }
     }
 
-    // Check if the message matches '!pasta keys'
-    else if (pastaKeys.test(message.content)) {
-        message.channel.send(`Available pastas: ${keys.join(', ')}`);
+    // Check if the message matches '!pasta list'
+    else if (pastaList.test(message.content)) {
+        const list = keys.sort().map(key => `\n• \`${key}\``);
+        message.channel.send(`Available pastas:${list}`);
     }
 
     // Check if the message matches '!pasta [key]'
@@ -71,7 +72,7 @@ module.exports = (_, store) => async message => {
             const pasta = await store.getPasta(key);
             message.channel.send(pasta.value);
         } else {
-            message.channel.send(`Could not find a pasta matching the key: **${key}**. Try typing \`!pasta keys\` to see the available keys or \`!pasta add\` to add a new pasta.`);
+            message.channel.send(`Could not find a pasta matching the key: **${key}**. Try typing \`!pasta list\` to see the available keys or \`!pasta add\` to add a new pasta.`);
         }
     }
 };

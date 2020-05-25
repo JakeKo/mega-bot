@@ -4,7 +4,7 @@ module.exports = () => message => {
 
     // Check if the message matches '!mega contribute'
     if (megaContribute.test(message.content)) {
-        message.channel.send('Want to help make Mega Bot better? Check out the open source repsitory: https://github.com/JakeKo/mega-bot.');
+        message.channel.send('Want to help make Mega Bot better? Check out the open source repsitory: https://github.com/JakeKo/mega-bot');
     }
 
     // Check if the message matches '!mega help'
