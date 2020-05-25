@@ -1,6 +1,6 @@
 module.exports = (_, store) => async message => {
     const keys = (await store.getPastas()).map(pasta => pasta.key);
-    const pastaAdd = /^!pasta\s+add\s+([0-9a-zA-Z\-_]+)\s+(.+)/;
+    const pastaAdd = /^!pasta\s+add\s+([0-9a-zA-Z\-_]+)\s*(.*)/;
     const pastaHelp = /^!pasta\s+help/;
     const pastaRemove = /^!pasta\s+remove\s+([0-9a-zA-Z\-_]+)/;
     const pastaList = /^!pasta\s+list/;
@@ -26,8 +26,14 @@ module.exports = (_, store) => async message => {
             message.channel.send('You think you\'re so slick just because you know what recursion is? Cute. Consider this pasta 🅱️ancelled.');
         }
 
+        // Check if neither a message is provided nor any attachments are included in the pasta
+        else if (value === '' && message.attachments.size === 0) {
+            message.channel.send('Cannot add pasta. You must provide a string message, photo attachment(s), or both to create a valid pasta.');
+        }
+
         else {
-            await store.addPasta(key, value);
+            const attachments = message.attachments.array().map(a => a.attachment);
+            await store.addPasta(key, value, attachments);
             message.channel.send(`Added new pasta: **${key}**. Type \`!pasta ${key}\` to share it with the channel.`);
         }
     }
@@ -59,8 +65,8 @@ module.exports = (_, store) => async message => {
 
     // Check if the message matches '!pasta list'
     else if (pastaList.test(message.content)) {
-        const list = keys.sort().map(key => `\n• \`${key}\``);
-        message.channel.send(`Available pastas:${list}`);
+        const list = keys.sort().map(key => `• \`${key}\``).join('\n');
+        message.channel.send(`Available pastas:\n${list}`);
     }
 
     // Check if the message matches '!pasta [key]'
@@ -70,7 +76,7 @@ module.exports = (_, store) => async message => {
         // Display the pasta corresponding to the provided key if one exists
         if (keys.includes(key)) {
             const pasta = await store.getPasta(key);
-            message.channel.send(pasta.value);
+            message.channel.send(pasta.value, { files: pasta.attachments || [] });
         } else {
             message.channel.send(`Could not find a pasta matching the key: **${key}**. Try typing \`!pasta list\` to see the available keys or \`!pasta add\` to add a new pasta.`);
         }

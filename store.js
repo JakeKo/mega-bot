@@ -19,8 +19,8 @@ module.exports = async () => {
         getPasta: async key => {
             return await pastaCollection.findOne({ key });
         },
-        addPasta: async (key, value) => {
-            await pastaCollection.insertOne({ key, value });
+        addPasta: async (key, value, attachments) => {
+            await pastaCollection.insertOne({ key, value, attachments });
         },
         removePasta: async key => {
             await pastaCollection.deleteOne({ key });
