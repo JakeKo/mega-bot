@@ -28,9 +28,13 @@ After doing so, check the following. An example of typical console output is pro
 3. `(DEV) Mega Bot` responds to commands in the sandbox guild.
 4. The behavior of `(DEV) Mega Bot` responds to changes you've made locally.
 
-![Typical console output]()
+**Typical Console Output**
+
+![Typical console output](./assets/dev-console-output.png)
 
 ## Multiple Responses from `(DEV) Mega Bot`
 If others happen to be testing `(DEV) Mega Bot` at the same time, you will see multiple responses to each command. An example of multiple responses is provided below. This occurs because there is only one `(DEV) Mega Bot`, ergo only one connection string. Since multiple people can log in to the bot at the same time, it will respond once for each valid log in.
 
-![Example of multiple bot responses]()
+**Multiple Bot Responses in the Sandbox Guild**
+
+![Example of multiple bot responses](./assets/multiple-bot-responses.png)
