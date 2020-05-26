@@ -44,9 +44,9 @@ module.exports = (_, store) => async message => {
             '**Usage Intstructions for Pasta Bot:**',
             '• `!pasta help`: View usage instructions for Pasta Bot.',
             '• `!pasta list`: View list of currently available pastas.',
-            '• `!pasta [key]`: View pasta corresponding to the provided key.',
-            '• `!pasta add [key] [value]`: Create pasta with the provided key and value.',
-            '• `!pasta remove [key]`: Remove pasta with the provided key.',
+            '• `!pasta [key] [?args]`: View pasta corresponding to the provided key. Example: `!pasta greet &user1 Thing 1 &user2 Thing 2`',
+            '• `!pasta add [key] [value]`: Create pasta with the provided key and value with embedded arguments. Example: `!pasta add greet Hello {{user1}} and {{user2}}!`',
+            '• `!pasta remove [key]`: Remove pasta with the provided key.'
         ].join('\n'));
     }
 
