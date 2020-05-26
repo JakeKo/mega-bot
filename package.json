@@ -4,8 +4,11 @@
   "description": "A fire-from-the-hip attempt at making a Discord bot",
   "main": "app.js",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development node ./app.js",
-    "prod": "cross-env NODE_ENV=production node ./app.js",
+    "lint": "eslint *.js",
+    "build:dev": "cross-env NODE_ENV=development node ./app.js",
+    "build:prod": "cross-env NODE_ENV=production node ./app.js",
+    "dev": "npm run lint && npm run build:dev",
+    "prod": "npm run build:prod",
     "start": "npm run prod"
   },
   "repository": {
