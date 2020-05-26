@@ -1,10 +1,10 @@
 module.exports = (_, store) => async message => {
     const keys = (await store.getPastas()).map(pasta => pasta.key);
-    const pastaAdd = /^!pasta +add +(\S+) *(.*)/;
+    const pastaAdd = /^!pasta +add +(\S+)(.*)/;
     const pastaHelp = /^!pasta +help/;
     const pastaRemove = /^!pasta +remove +(\S+)/;
     const pastaList = /^!pasta +list/;
-    const pastaSearch = /^!pasta +(\S+)([\S\s]*)/;
+    const pastaSearch = /^!pasta +(\S+)(.*)/;
     const keywords = ['add', 'help', 'remove', 'list'];
 
     // Check if the message matches '!pasta add [key] [value]'
@@ -22,18 +22,18 @@ module.exports = (_, store) => async message => {
         }
 
         // Check if the value is poised to cause a recursive nightmare by starting with '!pasta'
-        else if (/^!pasta/.test(value)) {
+        else if (/^!pasta/.test(value.trim())) {
             message.channel.send('You think you\'re so slick just because you know what recursion is? Cute. Consider this pasta 🅱️ancelled.');
         }
 
         // Check if neither a message is provided nor any attachments are included in the pasta
-        else if (value === '' && message.attachments.size === 0) {
+        else if (value.trim() === '' && message.attachments.size === 0) {
             message.channel.send('Cannot add pasta. You must provide a string message, photo attachment(s), or both to create a valid pasta.');
         }
 
         else {
             const attachments = message.attachments.array().map(a => a.attachment);
-            await store.addPasta(key, value, attachments);
+            await store.addPasta(key, value.trim(), attachments);
             message.channel.send(`Added new pasta: **${key}**. Type \`!pasta ${key}\` to share it with the channel.`);
         }
     }
@@ -81,21 +81,21 @@ module.exports = (_, store) => async message => {
             const pasta = await store.getPasta(key);
 
             // Given a pasta value of 'Hello |user1| and |  user2  |!'
-            // 1. 'Hello |user1| and |user2|!' => [['|user1|', 'user1'], ['|user2|'. 'user2']]
-            // 2. [['|user1|', 'user1'], ['|user2|'. 'user2']] => [ 'user1', 'user2' ]
-            const expectedArgMatches = [...pasta.value.matchAll(/\| *(\S+) *\|/g)];
+            // 1. 'Hello {{user1}} and {{user2}}!' => [['{{user1}}', 'user1'], ['{{user2}}'. 'user2']]
+            // 2. [['{{user1}}', 'user1'], ['{{user2}}'. 'user2']] => [ 'user1', 'user2' ]
+            const expectedArgMatches = [...pasta.value.matchAll(/{{ *(\S+) *}}/g)];
             const expectedArgs = expectedArgMatches.map(match => match[1]);
 
             // Given a pasta call of '!pasta arg-test |user1 Thing 1 |user2 Thing 2'
-            // 1. '!pasta arg-test |user1 Thing 1 |user2 Thing 2' => [['|user1 Thing 1 ', 'user1', ' Thing 1 '], ['|user2 Thing 2', 'user2', ' Thing 2']]
-            // 2. [['|user1 Thing 1 ', 'user1', ' Thing 1 '], ['|user2 Thing 2', 'user2', ' Thing 2']] => { user1: 'Thing 1', user2: 'Thing 2' }
-            const providedArgMatches = [...argsString.matchAll(/\| *(\S+)([^\|]+)/g)];
+            // 1. '!pasta arg-test &user1 Thing 1 &user2 Thing 2' => [['&user1 Thing 1 ', 'user1', ' Thing 1 '], ['&user2 Thing 2', 'user2', ' Thing 2']]
+            // 2. [['&user1 Thing 1 ', 'user1', ' Thing 1 '], ['&user2 Thing 2', 'user2', ' Thing 2']] => { user1: 'Thing 1', user2: 'Thing 2' }
+            const providedArgMatches = [...argsString.matchAll(/& *(\S+)([^&]+)/g)];
             const providedArgs = providedArgMatches.reduce((params, match) => ({ ...params, [match[1]]: match[2].trim() }), {});
 
-            // For each expected arg, replace all instances of '|arg|' with the provided arg value
+            // For each expected arg, replace all instances of '{{arg}}' with the provided arg value
             const value = expectedArgs.reduce((output, arg) => {
-                const regex = new RegExp(`\\| *${arg} *\\|`, 'g');
-                output.replace(regex, providedArgs[arg]);
+                const regex = new RegExp(`{{ *${arg} *}}`, 'g');
+                return output.replace(regex, providedArgs[arg]);
             }, pasta.value);
 
             // Send the fully interpolated message
