@@ -65,8 +65,8 @@ module.exports = (_, store) => async message => {
 
     // Check if the message matches '!pasta list'
     else if (pastaList.test(message.content)) {
-        const list = keys.sort().map(key => `• \`${key}\``).join('\n');
-        message.channel.send(`Available pastas:\n${list}`);
+        const list = keys.sort().map(key => `\`${key}\``).join(', ');
+        message.channel.send(`Available pastas (${keys.length}):\n${list}`);
     }
 
     // Check if the message matches '!pasta [key]'
@@ -75,9 +75,9 @@ module.exports = (_, store) => async message => {
 
         // Display the pasta corresponding to the provided key if one exists
         if (keys.includes(key)) {
-            // Regular expressions are very confusing and take a lot of explanation
-            // I do not have faith in my ability to describe what's going on here, so I hope a few examples do the trick
-            // The provided examples are 'ideal' situations but assume that whitespace is not a problem
+            // Regular expressions are very confusing
+            // I do not have faith in my ability to describe what is happening, so I hope a few examples do the trick
+            // The provided examples are 'ideal' situations, but assume that whitespace is not a problem
             const pasta = await store.getPasta(key);
 
             // Given a pasta value of 'Hello |user1| and |  user2  |!'
