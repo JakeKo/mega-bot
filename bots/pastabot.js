@@ -9,7 +9,7 @@ module.exports = (_, store) => async message => {
 
     // Check if the message matches '!pasta add [key] [value]'
     if (pastaAdd.test(message.content)) {
-        const [_, key, value] = message.content.match(pastaAdd);
+        const [, key, value] = message.content.match(pastaAdd);
 
         // Check if the key is a reserved keyword
         if (keywords.includes(key)) {
@@ -52,7 +52,7 @@ module.exports = (_, store) => async message => {
 
     // Check if the message matches '!pasta remove [key]'
     else if (pastaRemove.test(message.content)) {
-        const [_, key] = message.content.match(pastaRemove);
+        const [, key] = message.content.match(pastaRemove);
 
         // Display the pasta corresponding to the provided key if one exists
         if (keys.includes(key)) {
@@ -71,7 +71,7 @@ module.exports = (_, store) => async message => {
 
     // Check if the message matches '!pasta [key]'
     else if (pastaSearch.test(message.content)) {
-        const [_, key, argsString] = message.content.match(pastaSearch);
+        const [, key, argsString] = message.content.match(pastaSearch);
 
         // Display the pasta corresponding to the provided key if one exists
         if (keys.includes(key)) {
