@@ -22,5 +22,8 @@
     "cross-env": "^7.0.2",
     "discord.js": "^12.2.0",
     "mongodb": "^3.5.7"
+  },
+  "devDependencies": {
+    "eslint": "^7.1.0"
   }
 }

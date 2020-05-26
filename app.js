@@ -11,8 +11,8 @@
 
     // Register bots
     bot.on('ready', () => console.log(`Logged in as ${bot.user.tag}!`));
-    bot.on('message', megabot)
-    // bot.on('message', statbot);
+    bot.on('message', megabot);
+    bot.on('message', statbot);
     bot.on('message', pastabot);
 
     bot.login(config.DISCORD_BOT_TOKEN);
