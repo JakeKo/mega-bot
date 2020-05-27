@@ -4,8 +4,9 @@ module.exports = (_, store) => async message => {
     const pastaHelp = /^!pasta +help/;
     const pastaRemove = /^!pasta +remove +(\S+)/;
     const pastaList = /^!pasta +list/;
+    const pastaArgs = /^!pasta +args +(\S+)/;
     const pastaSearch = /^!pasta +(\S+)(.*)/;
-    const keywords = ['add', 'help', 'remove', 'list'];
+    const keywords = ['add', 'help', 'remove', 'list', 'args'];
 
     // Check if the message matches '!pasta add [key] [value]'
     if (pastaAdd.test(message.content)) {
@@ -69,6 +70,28 @@ module.exports = (_, store) => async message => {
         message.channel.send(`Available pastas (${keys.length}):\n${list}`);
     }
 
+    // Check if the message matches '!pasta args [key]'
+    else if (pastaArgs.test(message.content)) {
+        const [, key] = message.content.match(pastaArgs);
+
+        if (keys.includes(key)) {
+            // Regular expressions are very confusing
+            // I do not have faith in my ability to describe what is happening, so I hope a few examples do the trick
+            // The provided examples are 'ideal' situations, but assume that whitespace is not a problem
+            const pasta = await store.getPasta(key);
+
+            // Given a pasta value of 'Hello |user1| and |  user2  |!'
+            // 1. 'Hello {{user1}} and {{user2}}!' => [['{{user1}}', 'user1'], ['{{user2}}'. 'user2']]
+            // 2. [['{{user1}}', 'user1'], ['{{user2}}'. 'user2']] => [ 'user1', 'user2' ]
+            const expectedArgMatches = [...pasta.value.matchAll(/{{ *(\S+) *}}/g)];
+            const expectedArgs = expectedArgMatches.map(match => match[1]);
+
+            message.channel.send(`Usage: \`!pasta ${key} ${expectedArgs.join(', ')}\``);
+        } else {
+            message.channel.send(`Could not find a pasta matching the key: **${key}**. Try typing \`!pasta list\` to see the available keys.`);
+        }
+    }
+
     // Check if the message matches '!pasta [key]'
     else if (pastaSearch.test(message.content)) {
         const [, key, argsString] = message.content.match(pastaSearch);
@@ -101,7 +124,7 @@ module.exports = (_, store) => async message => {
             // Send the fully interpolated message
             message.channel.send(value, { files: pasta.attachments || [] });
         } else {
-            message.channel.send(`Could not find a pasta matching the key: **${key}**. Try typing \`!pasta list\` to see the available keys or \`!pasta add\` to add a new pasta.`);
+            message.channel.send(`Could not find a pasta matching the key: **${key}**. Try typing \`!pasta list\` to see the available keys.`);
         }
     }
 };
