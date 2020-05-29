@@ -75,16 +75,8 @@ module.exports = (_, store) => async message => {
         const [, key] = message.content.match(pastaArgs);
 
         if (keys.includes(key)) {
-            // Regular expressions are very confusing
-            // I do not have faith in my ability to describe what is happening, so I hope a few examples do the trick
-            // The provided examples are 'ideal' situations, but assume that whitespace is not a problem
             const pasta = await store.getPasta(key);
-
-            // Given a pasta value of 'Hello |user1| and |  user2  |!'
-            // 1. 'Hello {{user1}} and {{user2}}!' => [['{{user1}}', 'user1'], ['{{user2}}'. 'user2']]
-            // 2. [['{{user1}}', 'user1'], ['{{user2}}'. 'user2']] => [ 'user1', 'user2' ]
-            const expectedArgMatches = [...pasta.value.matchAll(/{{ *(\S+) *}}/g)];
-            const expectedArgs = expectedArgMatches.map(match => match[1]);
+            const expectedArgs = getExpectedArgsFromPasta(pasta.value);
 
             message.channel.send(`Usage: \`!pasta ${key} ${expectedArgs.join(', ')}\``);
         } else {
@@ -94,26 +86,13 @@ module.exports = (_, store) => async message => {
 
     // Check if the message matches '!pasta [key]'
     else if (pastaSearch.test(message.content)) {
-        const [, key, argsString] = message.content.match(pastaSearch);
+        const [, key, args] = message.content.match(pastaSearch);
 
         // Display the pasta corresponding to the provided key if one exists
         if (keys.includes(key)) {
-            // Regular expressions are very confusing
-            // I do not have faith in my ability to describe what is happening, so I hope a few examples do the trick
-            // The provided examples are 'ideal' situations, but assume that whitespace is not a problem
             const pasta = await store.getPasta(key);
-
-            // Given a pasta value of 'Hello |user1| and |  user2  |!'
-            // 1. 'Hello {{user1}} and {{user2}}!' => [['{{user1}}', 'user1'], ['{{user2}}'. 'user2']]
-            // 2. [['{{user1}}', 'user1'], ['{{user2}}'. 'user2']] => [ 'user1', 'user2' ]
-            const expectedArgMatches = [...pasta.value.matchAll(/{{ *(\S+) *}}/g)];
-            const expectedArgs = expectedArgMatches.map(match => match[1]);
-
-            // Given a pasta call of '!pasta arg-test |user1 Thing 1 |user2 Thing 2'
-            // 1. '!pasta arg-test &user1 Thing 1 &user2 Thing 2' => [['&user1 Thing 1 ', 'user1', ' Thing 1 '], ['&user2 Thing 2', 'user2', ' Thing 2']]
-            // 2. [['&user1 Thing 1 ', 'user1', ' Thing 1 '], ['&user2 Thing 2', 'user2', ' Thing 2']] => { user1: 'Thing 1', user2: 'Thing 2' }
-            const providedArgMatches = [...argsString.matchAll(/& *(\S+)([^&]+)/g)];
-            const providedArgs = providedArgMatches.reduce((params, match) => ({ ...params, [match[1]]: match[2].trim() }), {});
+            const expectedArgs = getExpectedArgsFromPasta(pasta.value);
+            const providedArgs = getProvidedArgsFromInput(args);
 
             // For each expected arg, replace all instances of '{{arg}}' with the provided arg value
             const value = expectedArgs.reduce((output, arg) => {
@@ -128,3 +107,19 @@ module.exports = (_, store) => async message => {
         }
     }
 };
+
+// Given a pasta value of 'Hello {{user1}} and {{user2}}!'
+// 1. 'Hello {{user1}} and {{user2}}!' => [['{{user1}}', 'user1'], ['{{user2}}'. 'user2']]
+// 2. [['{{user1}}', 'user1'], ['{{user2}}'. 'user2']] => ['user1', 'user2']
+function getExpectedArgsFromPasta(pasta) {
+    const expectedArgs = [...pasta.matchAll(/{{ *(\S+) *}}/g)];
+    return expectedArgs.map(match => match[1]);
+}
+    
+// Given a pasta call of '!pasta arg-test &user1 Thing 1 &user2 Thing 2'
+// 1. '!pasta arg-test &user1 Thing 1 &user2 Thing 2' => [['&user1 Thing 1 ', 'user1', ' Thing 1 '], ['&user2 Thing 2', 'user2', ' Thing 2']]
+// 2. [['&user1 Thing 1 ', 'user1', ' Thing 1 '], ['&user2 Thing 2', 'user2', ' Thing 2']] => { user1: 'Thing 1', user2: 'Thing 2' }
+function getProvidedArgsFromInput(input) {
+    const providedArgs = [...input.matchAll(/& *(\S+)([^&]+)/g)];
+    return  providedArgs.reduce((params, match) => ({ ...params, [match[1]]: match[2].trim() }), {});
+}

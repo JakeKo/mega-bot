@@ -1,6 +1,7 @@
 module.exports = () => message => {
-    const megaContribute = /^!mega\s+contribute/;
-    const megaHelp = /^!mega\s+help/;
+    const megaContribute = /^!mega +contribute/;
+    const megaHelp = /^!mega +help/;
+    const megaLinks = /^!mega +links/;
 
     // Check if the message matches '!mega contribute'
     if (megaContribute.test(message.content)) {
@@ -13,7 +14,16 @@ module.exports = () => message => {
             '**Usage Intstructions for Mega Bot:**',
             '• `!mega contribute`: Learn about how to contribute to Mega Bot.',
             '• `!mega help`: View usage instructions for Mega Bot.',
-            '• `!pasta help`: View usage instructions for Pasta Bot.'
+            '• `!mega links`: View a list of helpful links.'
+        ].join('\n'));
+    }
+
+    // Check if the message matches '!mega links'
+    else if (megaLinks.test(message.content)) {
+        message.channel.send([
+            '**Helpful Links:**',
+            'JDEK Login: http://jdekipedia.com/index.php?title=Special:Userlogin&returnto=Main_Page',
+            'Raikes School Homepage: https://raikes.unl.edu/',
         ].join('\n'));
     }
 };
