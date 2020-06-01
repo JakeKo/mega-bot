@@ -13,6 +13,7 @@
         "ecmaVersion": 11,
         "sourceType": "script"
     },
+    "ignorePatterns": ["node_modules"],
     "rules": {
         "indent": [
             "error",
