@@ -19,10 +19,17 @@ jobs:
         node-version: [14.x]
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        persist-credentials: false
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - run: npm install
-    - run: npm run lint
+
+    - name: Install & Lint
+      run: |
+        npm install
+        npm run lint
