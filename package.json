@@ -7,7 +7,7 @@
     "lint": "eslint ./src/**/*.js",
     "dev": "npm run lint && cross-env NODE_ENV=development node ./src/app.js",
     "package": "rm -rf ./build && mkdir build && cp -r ./src ./build && cp ./package.json ./build && cp ./package-lock.json ./build",
-    "prod": "cross-env NODE_ENV=production node ./src/app.js"
+    "prod": "cross-env NODE_ENV=production nohup node ./src/app.js &"
   },
   "repository": {
     "type": "git",
