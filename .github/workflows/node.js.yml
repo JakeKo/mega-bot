@@ -29,10 +29,11 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    - name: Install & Lint
+    - name: Install, Lint, and Package
       run: |
         npm install
         npm run lint
+        npm run package
 
     - name: Deploy
       uses: wlixcc/SFTP-Deploy-Action@v1.0
@@ -40,5 +41,16 @@ jobs:
         username: 'root'
         server: ${{ secrets.SERVER_IP }}
         ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }} 
-        local_path: './*' 
-        remote_path: '/root'
+        local_path: './build' 
+        remote_path: '/root/mega-bot'
+
+    - name: Launch
+      uses: fifsky/ssh-action@master
+      with:
+        command: |
+          cd mega-bot
+          npm install
+          npm run prod
+        host: ${{ secrets.SERVER_IP }}
+        user: root
+        key: ${{ secrets.SSH_PRIVATE_KEY}}
