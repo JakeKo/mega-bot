@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 (async () => {
     const Discord = require('discord.js');
     const config = require('../config');

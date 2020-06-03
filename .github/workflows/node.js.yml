@@ -54,10 +54,10 @@ jobs:
       uses: fifsky/ssh-action@master
       with:
         command: |
-          killall node
           cd mega-bot
+          npm run stop:prod
           npm install
-          npm run prod
+          npm run start:prod
         host: ${{ secrets.SERVER_IP }}
         user: root
         key: ${{ secrets.SSH_PRIVATE_KEY}}
