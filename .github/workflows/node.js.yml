@@ -47,7 +47,7 @@ jobs:
         username: 'root'
         server: ${{ secrets.SERVER_IP }}
         ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }} 
-        local_path: './build' 
+        local_path: './build/*'
         remote_path: '/root/mega-bot'
 
     - name: Launch
