@@ -24,7 +24,7 @@ jobs:
       with:
         persist-credentials: false
 
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Setup Node
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
@@ -34,6 +34,12 @@ jobs:
         npm install
         npm run lint
         npm run package
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: mega-bot
+        path: ./build
 
     - name: Deploy
       uses: wlixcc/SFTP-Deploy-Action@v1.0
