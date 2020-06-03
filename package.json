@@ -5,10 +5,8 @@
   "main": "app.js",
   "scripts": {
     "lint": "eslint ./src/**/*.js",
-    "build:dev": "cross-env NODE_ENV=development node ./src/app.js",
-    "build:prod": "cross-env NODE_ENV=production node ./src/app.js",
-    "dev": "npm run lint && npm run build:dev",
-    "prod": "npm run build:prod",
+    "dev": "cross-env NODE_ENV=development npm run lint && node ./src/app.js",
+    "prod": "cross-env NODE_ENV=production node ./src/app.js",
     "start": "npm run prod"
   },
   "repository": {
