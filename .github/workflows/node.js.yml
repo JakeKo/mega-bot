@@ -54,6 +54,7 @@ jobs:
       uses: fifsky/ssh-action@master
       with:
         command: |
+          killall node
           cd mega-bot
           npm install
           npm run prod
