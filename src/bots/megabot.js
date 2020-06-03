@@ -22,8 +22,9 @@ module.exports = () => message => {
     else if (megaLinks.test(message.content)) {
         message.channel.send([
             '**Helpful Links:**',
-            'JDEK Login: http://jdekipedia.com/index.php?title=Special:Userlogin&returnto=Main_Page',
-            'Raikes School Homepage: https://raikes.unl.edu/',
+            'JDEK Login: http://jdekipedia.com/index.php?title=Special:Userlogin&returnto=Main_Page.',
+            'Raikes School Homepage: https://raikes.unl.edu/.',
+            'Smol Robots: https://twitter.com/smolrobots.'
         ].join('\n'));
     }
 };
