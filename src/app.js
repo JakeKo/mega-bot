@@ -5,6 +5,7 @@
     const bot = new Discord.Client();
     const store = await require('./store')();
 
+    // Register each bot
     const megabot = require('./bots/megabot')(bot, store);
     const statbot = require('./bots/statbot')(bot, store);
     const pastabot = require('./bots/pastabot')(bot, store);
