@@ -33,3 +33,12 @@ jobs:
       run: |
         npm install
         npm run lint
+
+    - name: Deploy
+      uses: wlixcc/SFTP-Deploy-Action@v1.0
+      with:
+        username: 'root'
+        server: ${{ secrets.SERVER_IP }}
+        private_key: ${{ secrets.SSH_PRIVATE_KEY }} 
+        local_path: './*' 
+        remote_path: '/root'
