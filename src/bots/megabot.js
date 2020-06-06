@@ -8,6 +8,7 @@ module.exports = () => message => {
         message.channel.send('Want to help make Mega Bot better? Check out the open source repsitory: https://github.com/JakeKo/mega-bot');
     }
 
+    // TODO: Capture '!mega'
     // Check if the message matches '!mega help'
     else if (megaHelp.test(message.content)) {
         message.channel.send([
@@ -17,7 +18,8 @@ module.exports = () => message => {
             '• `!mega links`: View a list of helpful links.'
         ].join('\n'));
     }
-
+    
+    // TODO: Add links to UNL homepage, CAPS, Ivory Tower, etc.
     // Check if the message matches '!mega links'
     else if (megaLinks.test(message.content)) {
         message.channel.send([

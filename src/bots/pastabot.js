@@ -39,6 +39,7 @@ module.exports = (_, store) => async message => {
         }
     }
 
+    // TODO: Capture '!pasta'
     // Check if the message matches '!pasta help'
     else if (pastaHelp.test(message.content)) {
         message.channel.send([
