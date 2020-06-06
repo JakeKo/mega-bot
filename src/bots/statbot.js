@@ -1,7 +1,6 @@
 module.exports = () => async message => {
     const statsReacts = /^!stats +reacts/;
     const statsPopular = /^!stats +popular/;
-    const statsActivity = /^!stats +activity/;
     const statsHelp = /^!stats +help/;
     const statsDefault = /^!stats/;
 
@@ -11,10 +10,10 @@ module.exports = () => async message => {
         const popularity = modelReactPopularity(messages);
 
         message.channel.send([
-            '**Top 10 Most Popular Reacts:**',
+            `**Top 10 Most Popular Reacts in <#${message.channel.id}>:**`,
             `*Messages Ingested: ${messages.length}*`,
             '',
-            ...popularity.slice(0, 10).map(react => `${react.reactId}: ${react.count}`)
+            ...popularity.slice(0, 10).map((react, i) => `${i + 1}. ${react.reactId}: ${react.count}`)
         ].join('\n'));
     }
 
@@ -24,16 +23,11 @@ module.exports = () => async message => {
         const popularity = await modelUserPopularity(messages);
 
         message.channel.send([
-            '**Top 10 Most Popular Users:**',
+            `**Top 10 Most Popular Users in <#${message.channel.id}>:**`,
             `*Messages Ingested: ${messages.length}*`,
             '',
-            ...popularity.slice(0, 10).map(user => `${user.userId}: ${user.reactCount}`)
+            ...popularity.slice(0, 10).map((user, i) => `${i + 1}. ${user.userId}: ${user.reactCount}`)
         ].join('\n'));
-    }
-
-    // Check if the message matches '!stats activity'
-    else if (statsActivity.test(message.content)) {
-        return;
     }
 
     // Check if the message matches '!stats help' or '!stats'
@@ -43,7 +37,8 @@ module.exports = () => async message => {
             '• `!stats help`: View usage instructions for Stat Bot.',
             `• \`!stats reacts\`: View a list of the most popular reacts in <#${message.channel.id}>.`,
             `• \`!stats popular\`: View the most popular members (based on reacts) in <#${message.channel.id}>.`,
-            // '• `!stats activity`: Check out how active #megachat has been recently.'
+            '',
+            '*Note: HTML Canvas supporting coming soon.*'
         ].join('\n'));
     }
 };
