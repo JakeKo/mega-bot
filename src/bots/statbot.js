@@ -10,7 +10,7 @@ module.exports = () => async message => {
             '**Usage Intstructions for Stat Bot:**',
             '• `!stats help`: View usage instructions for Stat Bot.',
             '• `!stats reacts`: View a list of the most popular reacts.',
-            // '• `!stats popular`: View the most popular members (based on reacts) in #megachat.',
+            '• `!stats popular`: View the most popular members (based on reacts) in #megachat.',
             // '• `!stats activity`: Check out how active #megachat has been recently.'
         ].join('\n'));
     }
@@ -30,7 +30,15 @@ module.exports = () => async message => {
 
     // Check if the message matches '!stats popular'
     else if (statsPopular.test(message.content)) {
-        return;
+        const messages = (await message.channel.messages.fetch()).array();
+        const popularity = modelUserPopularity(messages);
+        console.log(popularity);
+
+        message.channel.send([
+            '**Top 10 Most Popular Users:**',
+            `*Messages Ingested: ${messages.length}*`,
+            ...popularity.slice(0, 10).map(user => `<@${user.userId}>: ${user.reactCount}`)
+        ].join('\n'));
     }
 
     // Check if the message matches '!stats activity'
@@ -53,6 +61,22 @@ function modelReacts(messages) {
 
         return flatReacts.reduce((r, react) => [...r, ...react], []);
     }));
+}
+
+function modelUserPopularity(messages) {
+    const popularity = {};
+
+    messages.forEach(message => {
+        const userId = message.author.id;
+        const reacts = message.reactions.cache.array();
+        const reactCount = reacts.reduce((count, react) => count + react.count, 0);
+
+        popularity[userId] = popularity[userId] === undefined ? reactCount : popularity[userId] + reactCount;
+    });
+
+    return Object.keys(popularity)
+        .map(key => ({ userId: key, reactCount: popularity[key] }))
+        .sort((a, b) => a.reactCount >= b.reactCount ? -1 : 1);
 }
 
 function countOverallReacts(reacts) {
