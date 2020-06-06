@@ -1,5 +1,5 @@
 module.exports = () => async message => {
-    const statsHelp = /^stats +help/;
+    const statsHelp = /^!stats +help/;
     const statsReacts = /^!stats +reacts/;
     const statsPopular = /^!stats +popular/;
     const statsActivity = /^!stats +activity/;
@@ -9,8 +9,8 @@ module.exports = () => async message => {
         message.channel.send([
             '**Usage Intstructions for Stat Bot:**',
             '• `!stats help`: View usage instructions for Stat Bot.',
-            '• `!stats reacts`: View a list of the most popular reacts.',
-            '• `!stats popular`: View the most popular members (based on reacts) in #megachat.',
+            `• \`!stats reacts\`: View a list of the most popular reacts in <#${message.channel.id}>.`,
+            `• \`!stats popular\`: View the most popular members (based on reacts) in <#${message.channel.id}>.`,
             // '• `!stats activity`: Check out how active #megachat has been recently.'
         ].join('\n'));
     }
@@ -18,13 +18,12 @@ module.exports = () => async message => {
     // Check if the message matches '!stats reacts'
     else if (statsReacts.test(message.content)) {
         const messages = (await message.channel.messages.fetch()).array();
-        const reacts = await modelReacts(messages);
-        const count = countOverallReacts(reacts);
+        const popularity = modelReactPopularity(messages);
 
         message.channel.send([
             '**Top 10 Most Popular Reacts:**',
             `*Messages Ingested: ${messages.length}*`,
-            ...count.slice(0, 10).map(react => `${react.reactId}: ${react.count}`)
+            ...popularity.slice(0, 10).map(react => `${react.reactId}: ${react.count}`)
         ].join('\n'));
     }
 
@@ -32,7 +31,6 @@ module.exports = () => async message => {
     else if (statsPopular.test(message.content)) {
         const messages = (await message.channel.messages.fetch()).array();
         const popularity = modelUserPopularity(messages);
-        console.log(popularity);
 
         message.channel.send([
             '**Top 10 Most Popular Users:**',
@@ -47,20 +45,20 @@ module.exports = () => async message => {
     }
 };
 
-function modelReacts(messages) {
-    return Promise.all(messages.map(async message => {
+function modelReactPopularity(messages) {
+    const popularity = {};
+
+    messages.forEach(message => {
         const reacts = message.reactions.cache.array();
+        reacts.forEach(react => {
+            const reactId = react.emoji.name;
+            popularity[reactId] = popularity[reactId] === undefined ? react.count : popularity[reactId] + react.count;
+        });
+    });
 
-        const flatReacts = await Promise.all(reacts.map(async r => {
-            const users = (await r.users.fetch()).array();
-            return users.map(u => ({
-                reactId: r.emoji.name,
-                userId: u.id
-            }));
-        }));
-
-        return flatReacts.reduce((r, react) => [...r, ...react], []);
-    }));
+    return Object.keys(popularity)
+        .map(key => ({ reactId: key, count: popularity[key] }))
+        .sort((a, b) => a.count >= b.count ? -1 : 1);
 }
 
 function modelUserPopularity(messages) {
@@ -77,17 +75,4 @@ function modelUserPopularity(messages) {
     return Object.keys(popularity)
         .map(key => ({ userId: key, reactCount: popularity[key] }))
         .sort((a, b) => a.reactCount >= b.reactCount ? -1 : 1);
-}
-
-function countOverallReacts(reacts) {
-    const reactCounts = {};
-    const overallReacts = reacts.reduce((r, react) => [...r, ...react], []);
-    
-    overallReacts.forEach(({ reactId }) => {
-        reactCounts[reactId] = reactCounts[reactId] === undefined ? 1 : reactCounts[reactId] + 1;
-    });
-
-    return Object.keys(reactCounts)
-        .map(key => ({ reactId: key, count: reactCounts[key] }))
-        .sort((a, b) => a.count >= b.count ? -1 : 1);
 }
