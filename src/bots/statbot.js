@@ -23,6 +23,7 @@ module.exports = () => async message => {
         message.channel.send([
             '**Top 10 Most Popular Reacts:**',
             `*Messages Ingested: ${messages.length}*`,
+            '',
             ...popularity.slice(0, 10).map(react => `${react.reactId}: ${react.count}`)
         ].join('\n'));
     }
@@ -30,12 +31,13 @@ module.exports = () => async message => {
     // Check if the message matches '!stats popular'
     else if (statsPopular.test(message.content)) {
         const messages = (await message.channel.messages.fetch()).array();
-        const popularity = modelUserPopularity(messages);
+        const popularity = await modelUserPopularity(messages);
 
         message.channel.send([
             '**Top 10 Most Popular Users:**',
             `*Messages Ingested: ${messages.length}*`,
-            ...popularity.slice(0, 10).map(user => `<@${user.userId}>: ${user.reactCount}`)
+            '',
+            ...popularity.slice(0, 10).map(user => `${user.userId}: ${user.reactCount}`)
         ].join('\n'));
     }
 
@@ -61,16 +63,18 @@ function modelReactPopularity(messages) {
         .sort((a, b) => a.count >= b.count ? -1 : 1);
 }
 
-function modelUserPopularity(messages) {
+async function modelUserPopularity(messages) {
     const popularity = {};
 
-    messages.forEach(message => {
-        const userId = message.author.id;
+    // Traditional for-loop is implemented to avoid async/await problems with forEach
+    for (let i = 0; i < messages.length; i++) {
+        const message = messages[i];
+        const userId = (await message.guild.members.fetch(message.author.id)).displayName;
         const reacts = message.reactions.cache.array();
         const reactCount = reacts.reduce((count, react) => count + react.count, 0);
 
-        popularity[userId] = popularity[userId] === undefined ? reactCount : popularity[userId] + reactCount;
-    });
+        popularity[userId] = popularity[userId] === undefined ? reactCount : popularity[userId] + reactCount; 
+    }
 
     return Object.keys(popularity)
         .map(key => ({ userId: key, reactCount: popularity[key] }))
