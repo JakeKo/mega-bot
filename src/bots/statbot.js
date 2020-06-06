@@ -51,7 +51,7 @@ function modelReactPopularity(messages) {
     messages.forEach(message => {
         const reacts = message.reactions.cache.array();
         reacts.forEach(react => {
-            const reactId = react.emoji.name;
+            const reactId = react.emoji.toString();
             popularity[reactId] = popularity[reactId] === undefined ? react.count : popularity[reactId] + react.count;
         });
     });
