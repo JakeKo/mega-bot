@@ -1,22 +1,12 @@
 module.exports = () => message => {
     const megaContribute = /^!mega +contribute/;
-    const megaHelp = /^!mega +help/;
     const megaLinks = /^!mega +links/;
+    const megaHelp = /^!mega +help/;
+    const megaDefault = /^!mega/;
 
     // Check if the message matches '!mega contribute'
     if (megaContribute.test(message.content)) {
         message.channel.send('Want to help make Mega Bot better? Check out the open source repsitory: https://github.com/JakeKo/mega-bot');
-    }
-
-    // TODO: Capture '!mega'
-    // Check if the message matches '!mega help'
-    else if (megaHelp.test(message.content)) {
-        message.channel.send([
-            '**Usage Intstructions for Mega Bot:**',
-            '• `!mega contribute`: Learn about how to contribute to Mega Bot.',
-            '• `!mega help`: View usage instructions for Mega Bot.',
-            '• `!mega links`: View a list of helpful links.'
-        ].join('\n'));
     }
     
     // TODO: Add links to UNL homepage, CAPS, Ivory Tower, etc.
@@ -27,6 +17,18 @@ module.exports = () => message => {
             'JDEK Login: http://jdekipedia.com/index.php?title=Special:Userlogin&returnto=Main_Page.',
             'Raikes School Homepage: https://raikes.unl.edu/.',
             'Smol Robots: https://twitter.com/smolrobots.'
+        ].join('\n'));
+    }
+
+    // Check if the message matches '!mega help' or '!mega'
+    else if (megaHelp.test(message.content) || megaDefault.test(message.content)) {
+        message.channel.send([
+            '**Usage Intstructions for Mega Bot:**',
+            '• `!mega contribute`: Learn about how to contribute to Mega Bot.',
+            '• `!mega links`: View a list of helpful links.',
+            '• `!mega help`: View usage instructions for Mega Bot.',
+            '• `!pasta help`: View usage instructions for Pasta Bot.',
+            '• `!stats help`: View usage instructions for Stat Bot.',
         ].join('\n'));
     }
 };

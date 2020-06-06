@@ -1,22 +1,12 @@
 module.exports = () => async message => {
-    const statsHelp = /^!stats +help/;
     const statsReacts = /^!stats +reacts/;
     const statsPopular = /^!stats +popular/;
     const statsActivity = /^!stats +activity/;
-
-    // Check if the message matches '!stats help'
-    if (statsHelp.test(message.content)) {
-        message.channel.send([
-            '**Usage Intstructions for Stat Bot:**',
-            '• `!stats help`: View usage instructions for Stat Bot.',
-            `• \`!stats reacts\`: View a list of the most popular reacts in <#${message.channel.id}>.`,
-            `• \`!stats popular\`: View the most popular members (based on reacts) in <#${message.channel.id}>.`,
-            // '• `!stats activity`: Check out how active #megachat has been recently.'
-        ].join('\n'));
-    }
+    const statsHelp = /^!stats +help/;
+    const statsDefault = /^!stats/;
 
     // Check if the message matches '!stats reacts'
-    else if (statsReacts.test(message.content)) {
+    if (statsReacts.test(message.content)) {
         const messages = (await message.channel.messages.fetch()).array();
         const popularity = modelReactPopularity(messages);
 
@@ -44,6 +34,17 @@ module.exports = () => async message => {
     // Check if the message matches '!stats activity'
     else if (statsActivity.test(message.content)) {
         return;
+    }
+
+    // Check if the message matches '!stats help' or '!stats'
+    else if (statsHelp.test(message.content) || statsDefault.test(message.content)) {
+        message.channel.send([
+            '**Usage Intstructions for Stat Bot:**',
+            '• `!stats help`: View usage instructions for Stat Bot.',
+            `• \`!stats reacts\`: View a list of the most popular reacts in <#${message.channel.id}>.`,
+            `• \`!stats popular\`: View the most popular members (based on reacts) in <#${message.channel.id}>.`,
+            // '• `!stats activity`: Check out how active #megachat has been recently.'
+        ].join('\n'));
     }
 };
 
