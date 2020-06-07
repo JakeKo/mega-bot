@@ -18,24 +18,24 @@ module.exports = () => async message => {
         //     `*Messages Ingested: ${messages.length}*`
         // ].join('\n'), new Discord.MessageAttachment(plot.toBuffer(), 'react-popularity.png'));
 
-        const maxPopularity = Math.max(...popularity.map(({ count }) => count));
         message.channel.send([
             `**Top ${popularity.length} Most Popular Reacts in <#${message.channel.id}>:**`,
             `*Messages Ingested: ${messages.length}*`,
-            ...popularity.map(react => `${react.reactId} ${Array(Math.round(15 * react.count / maxPopularity) + 1).join('█')} ${react.count}`)
+            '',
+            ...plotReactPopularity(popularity)
         ].join('\n'));
     }
 
     // Check if the message matches '!stats popular'
     else if (statsPopular.test(message.content)) {
         const messages = (await message.channel.messages.fetch()).array();
-        const popularity = await modelUserPopularity(messages);
+        const popularity = (await modelUserPopularity(messages)).slice(0, 10);
 
         message.channel.send([
-            `**Top 10 Most Popular Users in <#${message.channel.id}>:**`,
+            `**Top 10 Most Popular Users in <#${message.channel.id}> (by React Count):**`,
             `*Messages Ingested: ${messages.length}*`,
             '',
-            ...popularity.slice(0, 10).map((user, i) => `${i + 1}. ${user.userId}: ${user.reactCount}`)
+            ...plotUserPopularity(popularity)
         ].join('\n'));
     }
 
@@ -66,6 +66,13 @@ function modelReactPopularity(messages) {
     return Object.keys(popularity)
         .map(key => ({ reactId: key, count: popularity[key] }))
         .sort((a, b) => a.count >= b.count ? -1 : 1);
+}
+
+function plotReactPopularity(reacts) {
+    const maxValue = Math.max(...reacts.map(react => react.count));
+    const maxWidth = 20;
+
+    return reacts.map(({ reactId, count }) => `${reactId} ${Array(Math.round(maxWidth * count / maxValue) + 1).join('█')} ${count}`);
 }
 
 // async function plotReactPopularity(reactPopularity) {
@@ -133,4 +140,12 @@ async function modelUserPopularity(messages) {
     return Object.keys(popularity)
         .map(key => ({ userId: key, reactCount: popularity[key] }))
         .sort((a, b) => a.reactCount >= b.reactCount ? -1 : 1);
+}
+
+function plotUserPopularity(users) {
+    const maxLabelLength = Math.max(...users.map(user => user.userId.length));
+    const maxValue = Math.max(...users.map(user => user.reactCount));
+    const maxWidth = 15;
+
+    return users.map(({ userId, reactCount }) => `\`${userId.padStart(maxLabelLength, ' ')}\`: ${Array(Math.round(maxWidth * reactCount / maxValue) + 1).join('█')} ${reactCount}`);
 }
