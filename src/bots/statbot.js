@@ -1,3 +1,6 @@
+const Discord = require('discord.js');
+const Canvas = require('canvas');
+
 module.exports = () => async message => {
     const statsReacts = /^!stats +reacts/;
     const statsPopular = /^!stats +popular/;
@@ -8,13 +11,12 @@ module.exports = () => async message => {
     if (statsReacts.test(message.content)) {
         const messages = (await message.channel.messages.fetch()).array();
         const popularity = modelReactPopularity(messages);
+        const plot = await plotReactPopularity(popularity);
 
         message.channel.send([
-            `**Top 10 Most Popular Reacts in <#${message.channel.id}>:**`,
-            `*Messages Ingested: ${messages.length}*`,
-            '',
-            ...popularity.slice(0, 10).map((react, i) => `${i + 1}. ${react.reactId}: ${react.count}`)
-        ].join('\n'));
+            `**Top ${popularity.length} Most Popular Reacts in <#${message.channel.id}>:**`,
+            `*Messages Ingested: ${messages.length}*`
+        ].join('\n'), new Discord.MessageAttachment(plot.toBuffer(), 'react-popularity.png'));
     }
 
     // Check if the message matches '!stats popular'
@@ -49,7 +51,7 @@ function modelReactPopularity(messages) {
     messages.forEach(message => {
         const reacts = message.reactions.cache.array();
         reacts.forEach(react => {
-            const reactId = react.emoji.toString();
+            const reactId = react.emoji.url || react.emoji.name;
             popularity[reactId] = popularity[reactId] === undefined ? react.count : popularity[reactId] + react.count;
         });
     });
@@ -57,6 +59,55 @@ function modelReactPopularity(messages) {
     return Object.keys(popularity)
         .map(key => ({ reactId: key, count: popularity[key] }))
         .sort((a, b) => a.count >= b.count ? -1 : 1);
+}
+
+async function plotReactPopularity(reactPopularity) {
+    const width = 300;
+    const height = 300;
+    const plotMargin = { top: 5, right: 5, bottom: 5, left: 35 };
+    const barMargin = { top: 2, right: 0, bottom: 2, left: 0 };
+    const tagMargin = { top: 0, right: 5, bottom: 0, left: 0 };
+    const maxPopularity = Math.max(...reactPopularity.map(({ count }) => count));
+    const regionHeight = (height - plotMargin.top - plotMargin.bottom) / reactPopularity.length;
+    const regionWidth = width - plotMargin.left - plotMargin.right;
+    const emojiWidth = 15;
+    const emojiHeight = 15;
+    
+    const canvas = Canvas.createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
+
+    // Render canvas background
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, width, height);
+
+    for (let i = 0; i < reactPopularity.length; i++) {
+        const react = reactPopularity[i];
+        const regionMidpoint = (0.5 + i) * regionHeight + plotMargin.top;
+        const barHeight = regionHeight - barMargin.top - barMargin.bottom;
+        const barWidth = regionWidth * react.count / maxPopularity;
+
+        // Render bar label
+        if (/^https/.test(react.reactId)) {
+            const image = await Canvas.loadImage(react.reactId);
+            ctx.drawImage(image, plotMargin.left - tagMargin.right - emojiWidth, regionMidpoint - emojiHeight / 2, emojiWidth, emojiHeight);
+        } else {
+            ctx.fillStyle = '#23272A';
+            ctx.font = `${emojiHeight}px Arial`;
+            ctx.textAlign = 'right';
+            ctx.fillText(react.reactId, plotMargin.left - tagMargin.right, regionMidpoint + 4);
+        }
+
+        // Render bar
+        ctx.fillStyle = '#23272A';
+        ctx.fillRect(plotMargin.left, regionMidpoint - barHeight / 2, barWidth, barHeight);
+
+        // Render bar value
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText(react.count, plotMargin.left + barWidth - 8, regionMidpoint + 4);
+    }
+
+    return canvas;
 }
 
 async function modelUserPopularity(messages) {
@@ -69,7 +120,7 @@ async function modelUserPopularity(messages) {
         const reacts = message.reactions.cache.array();
         const reactCount = reacts.reduce((count, react) => count + react.count, 0);
 
-        popularity[userId] = popularity[userId] === undefined ? reactCount : popularity[userId] + reactCount; 
+        popularity[userId] = popularity[userId] === undefined ? reactCount : popularity[userId] + reactCount;
     }
 
     return Object.keys(popularity)
