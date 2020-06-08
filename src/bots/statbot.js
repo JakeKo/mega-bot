@@ -1,22 +1,22 @@
-// const Discord = require('discord.js');
-// const Canvas = require('canvas');
-
 module.exports = () => async message => {
+    const statsHelp = /^!stats +help/;
     const statsReacts = /^!stats +reacts/;
     const statsPopular = /^!stats +popular/;
-    const statsHelp = /^!stats +help/;
-    const statsDefault = /^!stats/;
+
+    // Check if the message matches '!stats help'
+    if (statsHelp.test(message.content)) {
+        message.channel.send([
+            '**Usage Intstructions for Stat Bot:**',
+            '• `!stats help`: View usage instructions for Stat Bot.',
+            `• \`!stats reacts\`: View a list of the most popular reacts in <#${message.channel.id}>.`,
+            `• \`!stats popular\`: View the most popular members (based on reacts) in <#${message.channel.id}>.`,
+        ].join('\n'));
+    }
 
     // Check if the message matches '!stats reacts'
-    if (statsReacts.test(message.content)) {
+    else if (statsReacts.test(message.content)) {
         const messages = (await message.channel.messages.fetch()).array();
         const popularity = modelReactPopularity(messages).slice(0, 10);
-        // const plot = await plotReactPopularity(popularity);
-
-        // message.channel.send([
-        //     `**Top ${popularity.length} Most Popular Reacts in <#${message.channel.id}>:**`,
-        //     `*Messages Ingested: ${messages.length}*`
-        // ].join('\n'), new Discord.MessageAttachment(plot.toBuffer(), 'react-popularity.png'));
 
         message.channel.send([
             `**Top ${popularity.length} Most Popular Reacts in <#${message.channel.id}>:**`,
@@ -32,22 +32,10 @@ module.exports = () => async message => {
         const popularity = (await modelUserPopularity(messages)).slice(0, 10);
 
         message.channel.send([
-            `**Top 10 Most Popular Users in <#${message.channel.id}> (by React Count):**`,
+            `**Top ${popularity.length} Most Popular Users in <#${message.channel.id}> (by React Count):**`,
             `*Messages Ingested: ${messages.length}*`,
             '',
             ...plotUserPopularity(popularity)
-        ].join('\n'));
-    }
-
-    // Check if the message matches '!stats help' or '!stats'
-    else if (statsHelp.test(message.content) || statsDefault.test(message.content)) {
-        message.channel.send([
-            '**Usage Intstructions for Stat Bot:**',
-            '• `!stats help`: View usage instructions for Stat Bot.',
-            `• \`!stats reacts\`: View a list of the most popular reacts in <#${message.channel.id}>.`,
-            `• \`!stats popular\`: View the most popular members (based on reacts) in <#${message.channel.id}>.`,
-            '',
-            '*Note: HTML Canvas supporting coming soon.*'
         ].join('\n'));
     }
 };
@@ -74,55 +62,6 @@ function plotReactPopularity(reacts) {
 
     return reacts.map(({ reactId, count }) => `${reactId} ${Array(Math.round(maxWidth * count / maxValue) + 1).join('█')} ${count}`);
 }
-
-// async function plotReactPopularity(reactPopularity) {
-//     const width = 300;
-//     const height = 300;
-//     const plotMargin = { top: 5, right: 5, bottom: 5, left: 35 };
-//     const barMargin = { top: 2, right: 0, bottom: 2, left: 0 };
-//     const tagMargin = { top: 0, right: 5, bottom: 0, left: 0 };
-//     const maxPopularity = Math.max(...reactPopularity.map(({ count }) => count));
-//     const regionHeight = (height - plotMargin.top - plotMargin.bottom) / reactPopularity.length;
-//     const regionWidth = width - plotMargin.left - plotMargin.right;
-//     const emojiWidth = 15;
-//     const emojiHeight = 15;
-    
-//     const canvas = Canvas.createCanvas(width, height);
-//     const ctx = canvas.getContext('2d');
-
-//     // Render canvas background
-//     ctx.fillStyle = '#FFFFFF';
-//     ctx.fillRect(0, 0, width, height);
-
-//     for (let i = 0; i < reactPopularity.length; i++) {
-//         const react = reactPopularity[i];
-//         const regionMidpoint = (0.5 + i) * regionHeight + plotMargin.top;
-//         const barHeight = regionHeight - barMargin.top - barMargin.bottom;
-//         const barWidth = regionWidth * react.count / maxPopularity;
-
-//         // Render bar label
-//         if (/^https/.test(react.reactId)) {
-//             const image = await Canvas.loadImage(react.reactId);
-//             ctx.drawImage(image, plotMargin.left - tagMargin.right - emojiWidth, regionMidpoint - emojiHeight / 2, emojiWidth, emojiHeight);
-//         } else {
-//             ctx.fillStyle = '#23272A';
-//             ctx.font = `${emojiHeight}px Arial`;
-//             ctx.textAlign = 'right';
-//             ctx.fillText(react.reactId, plotMargin.left - tagMargin.right, regionMidpoint + 4);
-//         }
-
-//         // Render bar
-//         ctx.fillStyle = '#23272A';
-//         ctx.fillRect(plotMargin.left, regionMidpoint - barHeight / 2, barWidth, barHeight);
-
-//         // Render bar value
-//         ctx.fillStyle = '#FFFFFF';
-//         ctx.font = 'bold 14px Arial';
-//         ctx.fillText(react.count, plotMargin.left + barWidth - 8, regionMidpoint + 4);
-//     }
-
-//     return canvas;
-// }
 
 async function modelUserPopularity(messages) {
     const popularity = {};

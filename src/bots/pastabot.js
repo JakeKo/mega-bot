@@ -1,16 +1,28 @@
 module.exports = (_, store) => async message => {
     const keys = (await store.getPastas()).map(pasta => pasta.key);
+    const pastaHelp = /^!pasta +help/;
     const pastaAdd = /^!pasta +add +(\S+)(.*)/;
     const pastaRemove = /^!pasta +remove +(\S+)/;
     const pastaList = /^!pasta +list/;
     const pastaArgs = /^!pasta +args +(\S+)/;
     const pastaSearch = /^!pasta +(\S+)(.*)/;
-    const pastaHelp = /^!pasta +help/;
-    const pastaDefault = /^!pasta/;
     const keywords = ['add', 'help', 'remove', 'list', 'args'];
 
+    // Check if the message matches '!pasta help'
+    if (pastaHelp.test(message.content)) {
+        message.channel.send([
+            '**Usage Intstructions for Pasta Bot:**',
+            '• `!pasta help`: View usage instructions for Pasta Bot.',
+            '• `!pasta list`: View list of currently available pastas.',
+            '• `!pasta [key] [?args]`: View pasta corresponding to the provided key. Example: `!pasta greet &user1 Thing 1 &user2 Thing 2`',
+            '• `!pasta args [key]`: View the usage instructions for the pasta with the provided key.',
+            '• `!pasta add [key] [value]`: Create pasta with the provided key and value with embedded arguments. Example: `!pasta add greet Hello {{user1}} and {{user2}}!`',
+            '• `!pasta remove [key]`: Remove pasta with the provided key.'
+        ].join('\n'));
+    }
+
     // Check if the message matches '!pasta add [key] [value]'
-    if (pastaAdd.test(message.content)) {
+    else if (pastaAdd.test(message.content)) {
         const [, key, value] = message.content.match(pastaAdd);
 
         // Check if the key is a reserved keyword
@@ -94,19 +106,6 @@ module.exports = (_, store) => async message => {
         } else {
             message.channel.send(`Could not find a pasta matching the key: **${key}**. Try typing \`!pasta list\` to see the available keys.`);
         }
-    }
-
-    // Check if the message matches '!pasta help' or '!pasta'
-    else if (pastaHelp.test(message.content) || pastaDefault.test(message.content)) {
-        message.channel.send([
-            '**Usage Intstructions for Pasta Bot:**',
-            '• `!pasta help`: View usage instructions for Pasta Bot.',
-            '• `!pasta list`: View list of currently available pastas.',
-            '• `!pasta [key] [?args]`: View pasta corresponding to the provided key. Example: `!pasta greet &user1 Thing 1 &user2 Thing 2`',
-            '• `!pasta args [key]`: View the usage instructions for the pasta with the provided key.',
-            '• `!pasta add [key] [value]`: Create pasta with the provided key and value with embedded arguments. Example: `!pasta add greet Hello {{user1}} and {{user2}}!`',
-            '• `!pasta remove [key]`: Remove pasta with the provided key.'
-        ].join('\n'));
     }
 };
 
