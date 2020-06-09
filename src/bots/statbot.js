@@ -1,4 +1,6 @@
-module.exports = () => async message => {
+const config = require('../../config');
+
+module.exports = (bot, store) => async message => {
     const statsHelp = /^!stats +help/;
     const statsReacts = /^!stats +reacts/;
     const statsPopular = /^!stats +popular/;
@@ -15,7 +17,7 @@ module.exports = () => async message => {
 
     // Check if the message matches '!stats reacts'
     else if (statsReacts.test(message.content)) {
-        const messages = (await message.channel.messages.fetch()).array();
+        const messages = await store.getMessages();
         const popularity = modelReactPopularity(messages).slice(0, 10);
 
         message.channel.send([
@@ -28,8 +30,8 @@ module.exports = () => async message => {
 
     // Check if the message matches '!stats popular'
     else if (statsPopular.test(message.content)) {
-        const messages = (await message.channel.messages.fetch()).array();
-        const popularity = (await modelUserPopularity(messages)).slice(0, 10);
+        const messages = await store.getMessages();
+        const popularity = (await modelUserPopularity(messages, bot)).slice(0, 10);
 
         message.channel.send([
             `**Top ${popularity.length} Most Popular Users in <#${message.channel.id}> (by React Count):**`,
@@ -43,11 +45,9 @@ module.exports = () => async message => {
 function modelReactPopularity(messages) {
     const popularity = {};
 
-    messages.forEach(message => {
-        const reacts = message.reactions.cache.array();
-        reacts.forEach(react => {
-            const reactId = react.emoji.toString();
-            popularity[reactId] = popularity[reactId] === undefined ? react.count : popularity[reactId] + react.count;
+    messages.forEach(({ reacts }) => {
+        reacts.forEach(({ react }) => {
+            popularity[react] = popularity[react] === undefined ? 1 : popularity[react] + 1;
         });
     });
 
@@ -63,22 +63,21 @@ function plotReactPopularity(reacts) {
     return reacts.map(({ reactId, count }) => `${reactId} ${Array(Math.round(maxWidth * count / maxValue) + 1).join('█')} ${count}`);
 }
 
-async function modelUserPopularity(messages) {
+async function modelUserPopularity(messages, bot) {
     const popularity = {};
 
-    // Traditional for-loop is implemented to avoid async/await problems with forEach
-    for (let i = 0; i < messages.length; i++) {
-        const message = messages[i];
-        const userId = (await message.guild.members.fetch(message.author.id)).displayName;
-        const reacts = message.reactions.cache.array();
-        const reactCount = reacts.reduce((count, react) => count + react.count, 0);
+    messages.forEach(({ author, reacts }) => {
+        popularity[author] = popularity[author] === undefined ? reacts.length : popularity[author] + reacts.length;
+    });
 
-        popularity[userId] = popularity[userId] === undefined ? reactCount : popularity[userId] + reactCount;
-    }
-
-    return Object.keys(popularity)
-        .map(key => ({ userId: key, reactCount: popularity[key] }))
-        .sort((a, b) => a.reactCount >= b.reactCount ? -1 : 1);
+    // Map user ID to display name
+    const members = bot.guilds.cache.first().members;
+    return (await Promise.all(Object.keys(popularity)
+        .filter(key => key !== config.GUILD_SYSTEM_USER_ID)
+        .map(async key => ({
+            userId: (await members.fetch(key)).displayName,
+            reactCount: popularity[key]
+        })))).sort((a, b) => a.reactCount >= b.reactCount ? -1 : 1);
 }
 
 function plotUserPopularity(users) {
