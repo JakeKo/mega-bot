@@ -10,8 +10,8 @@ module.exports = (bot, store) => async message => {
         message.channel.send([
             '**Usage Intstructions for Stat Bot:**',
             '• `!stats help`: View usage instructions for Stat Bot.',
-            `• \`!stats reacts\`: View a list of the most popular reacts in <#${message.channel.id}>.`,
-            `• \`!stats popular\`: View the most popular members (based on reacts) in <#${message.channel.id}>.`,
+            '• `!stats reacts`: View a list of the most popular reacts in Mega Chat.',
+            '• `!stats popular`: View the most popular members (based on reacts) in Mega Chat.',
         ].join('\n'));
     }
 
@@ -21,7 +21,7 @@ module.exports = (bot, store) => async message => {
         const popularity = modelReactPopularity(messages).slice(0, 10);
 
         message.channel.send([
-            `**Top ${popularity.length} Most Popular Reacts in <#${message.channel.id}>:**`,
+            `**Top ${popularity.length} Most Popular Reacts in Mega Chat:**`,
             `*Messages Ingested: ${messages.length}*`,
             '',
             ...plotReactPopularity(popularity)
@@ -34,7 +34,7 @@ module.exports = (bot, store) => async message => {
         const popularity = (await modelUserPopularity(messages, bot)).slice(0, 10);
 
         message.channel.send([
-            `**Top ${popularity.length} Most Popular Users in <#${message.channel.id}> (by React Count):**`,
+            `**Top ${popularity.length} Most Popular Users in Mega Chat (by React Count):**`,
             `*Messages Ingested: ${messages.length}*`,
             '',
             ...plotUserPopularity(popularity)
@@ -74,10 +74,19 @@ async function modelUserPopularity(messages, bot) {
     const members = bot.guilds.cache.first().members;
     return (await Promise.all(Object.keys(popularity)
         .filter(key => key !== config.GUILD_SYSTEM_USER_ID)
-        .map(async key => ({
-            userId: (await members.fetch(key)).displayName,
-            reactCount: popularity[key]
-        })))).sort((a, b) => a.reactCount >= b.reactCount ? -1 : 1);
+        .map(async key => {
+            try {
+                return {
+                    userId: (await members.fetch(key)).displayName,
+                    reactCount: popularity[key]
+                };
+            } catch(e) {
+                return {
+                    userId: '',
+                    reactCount: popularity[key]
+                };
+            }
+        }))).sort((a, b) => a.reactCount >= b.reactCount ? -1 : 1);
 }
 
 function plotUserPopularity(users) {
