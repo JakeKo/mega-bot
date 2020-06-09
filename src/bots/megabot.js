@@ -2,7 +2,6 @@ module.exports = () => message => {
     const megaContribute = /^!mega +contribute/;
     const megaLinks = /^!mega +links/;
     const megaHelp = /^!mega +help/;
-    const megaDefault = /^!mega/;
 
     // Check if the message matches '!mega contribute'
     if (megaContribute.test(message.content)) {
@@ -16,12 +15,13 @@ module.exports = () => message => {
             '**Helpful Links:**',
             'JDEK Login: http://jdekipedia.com/index.php?title=Special:Userlogin&returnto=Main_Page.',
             'Raikes School Homepage: https://raikes.unl.edu/.',
+            'Textbook Dropbox: https://bit.ly/raikesdropbox.',
             'Smol Robots: https://twitter.com/smolrobots.'
         ].join('\n'));
     }
 
-    // Check if the message matches '!mega help' or '!mega'
-    else if (megaHelp.test(message.content) || megaDefault.test(message.content)) {
+    // Check if the message matches '!mega help'
+    else if (megaHelp.test(message.content)) {
         message.channel.send([
             '**Usage Intstructions for Mega Bot:**',
             '• `!mega contribute`: Learn about how to contribute to Mega Bot.',

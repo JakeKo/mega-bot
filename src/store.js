@@ -11,6 +11,7 @@ module.exports = async () => {
     await client.connect();
     const db = client.db('discord-mega-bot');
     const pastaCollection = db.collection('pastas');
+    const messagesCollection = db.collection('messages');
 
     return {
         getPastas: async () => {
@@ -24,6 +25,20 @@ module.exports = async () => {
         },
         removePasta: async key => {
             await pastaCollection.deleteOne({ key });
+        },
+        getMessages: async () => {
+            return await messagesCollection.find({}).toArray();
+        },
+        getLastMessage: async () => {
+            return  await messagesCollection.countDocuments({}) === 0
+                ? { id: config.STATBOT_CHANNEL_FIRST_MESSAGE_ID }
+                : (await messagesCollection.find({}, { limit: 1 }).sort('timestamp', -1).toArray())[0];
+        },
+        archiveMessages: async messages => {
+            await messagesCollection.insertMany(messages);
+        },
+        clearMessages: async () => {
+            await messagesCollection.deleteMany({});
         }
     };
 };
