@@ -40,6 +40,6 @@ module.exports = function archive(bot, store) {
         }
 
         console.log(`END ARCHIVE RUN ${archiveCounter}`);
-        setTimeout(archive(bot, store), 1000 * 5);
+        setTimeout(archive(bot, store), 1000 * 60 * 60);
     };
 };
