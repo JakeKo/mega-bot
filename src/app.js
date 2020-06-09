@@ -16,10 +16,9 @@
     bot.on('message', statbot);
     bot.on('message', pastabot);
 
-    bot.login(config.DISCORD_BOT_TOKEN);
+    await bot.login(config.DISCORD_BOT_TOKEN);
 
     // Register archiver
-    const archiver = require('./archiver')(bot, store);
-    await store.clearMessages();
-    setInterval(archiver, 1000 * 10);
+    const startArchiver = require('./archiver')(bot, store);
+    setTimeout(startArchiver, 1000 * 5);
 })();

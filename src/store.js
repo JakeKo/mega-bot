@@ -9,7 +9,7 @@ module.exports = async () => {
     });
 
     await client.connect();
-    const db = client.db('discord-mega-bot');
+    const db = client.db(config.MONGODB_DATABASE);
     const pastaCollection = db.collection('pastas');
     const messagesCollection = db.collection('messages');
 
