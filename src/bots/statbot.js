@@ -73,11 +73,18 @@ async function modelUserPopularity(messages, bot) {
     // Map user ID to display name
     const members = bot.guilds.cache.first().members;
     return (await Promise.all(Object.keys(popularity)
-        .filter(key => key !== config.STATBOT_ID_BLACKLIST.includes(key))
-        .map(async key => ({
-            userId: (await members.fetch(key)).displayName,
-            reactCount: popularity[key]
-        })))).sort((a, b) => a.reactCount >= b.reactCount ? -1 : 1);
+        .filter(key => !config.STATBOT_ID_BLACKLIST.includes(key))
+        .map(async key => {
+            let userId = '';
+
+            try {
+                userId = (await members.fetch(key)).displayName;
+            } catch {
+                console.log(`Bad User ID: ${key}`);
+            }
+
+            return { userId, reactCount: popularity[key] };
+        }))).sort((a, b) => a.reactCount >= b.reactCount ? -1 : 1);
 }
 
 function plotUserPopularity(users) {
