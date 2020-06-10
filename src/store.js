@@ -36,9 +36,6 @@ module.exports = async () => {
         },
         archiveMessages: async messages => {
             await messagesCollection.insertMany(messages);
-        },
-        clearMessages: async () => {
-            await messagesCollection.deleteMany({});
         }
     };
 };

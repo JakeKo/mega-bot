@@ -2,6 +2,7 @@ const config = require('../../config');
 
 module.exports = (bot, store) => async message => {
     const statsHelp = /^!stats +help/;
+    const statsStatus = /^!stats +status/;
     const statsReacts = /^!stats +reacts/;
     const statsPopular = /^!stats +popular/;
 
@@ -9,9 +10,22 @@ module.exports = (bot, store) => async message => {
     if (statsHelp.test(message.content)) {
         message.channel.send([
             '**Usage Intstructions for Stat Bot:**',
-            '• `!stats help`: View usage instructions for Stat Bot.',
-            '• `!stats reacts`: View a list of the most popular reacts in Mega Chat.',
-            '• `!stats popular`: View the most popular members (based on reacts) in Mega Chat.',
+            '>>> `!stats help`: View usage instructions for Stat Bot.',
+            '`!stats reacts`: View a list of the most popular reacts in Mega Chat.',
+            '`!stats popular`: View the most popular members (based on reacts) in Mega Chat.',
+        ].join('\n'));
+    }
+
+    // Check if the message matches '!stats status'
+    else if (statsStatus.test(message.content)) {
+        const messages = await store.getMessages();
+        const lastMessage = await store.getLastMessage();
+
+        // TODO: Include timestamp of last archive run and next archive run
+        message.channel.send([
+            '**STAT BOT STATUS**',
+            `>>> Messages Ingested: **${messages.length}**`,
+            `Last Ingested Message: **${new Date(lastMessage.timestamp).toLocaleString()}**`
         ].join('\n'));
     }
 
@@ -22,7 +36,6 @@ module.exports = (bot, store) => async message => {
 
         message.channel.send([
             `**Top ${popularity.length} Most Popular Reacts in Mega Chat:**`,
-            `*Messages Ingested: ${messages.length}*`,
             '',
             ...plotReactPopularity(popularity)
         ].join('\n'));
@@ -35,7 +48,6 @@ module.exports = (bot, store) => async message => {
 
         message.channel.send([
             `**Top ${popularity.length} Most Popular Users in Mega Chat (by React Count):**`,
-            `*Messages Ingested: ${messages.length}*`,
             '',
             ...plotUserPopularity(popularity)
         ].join('\n'));

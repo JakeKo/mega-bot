@@ -12,12 +12,12 @@ module.exports = (_, store) => async message => {
     if (pastaHelp.test(message.content)) {
         message.channel.send([
             '**Usage Intstructions for Pasta Bot:**',
-            '• `!pasta help`: View usage instructions for Pasta Bot.',
-            '• `!pasta list`: View list of currently available pastas.',
-            '• `!pasta [key] [?args]`: View pasta corresponding to the provided key. Example: `!pasta greet &user1 Thing 1 &user2 Thing 2`',
-            '• `!pasta args [key]`: View the usage instructions for the pasta with the provided key.',
-            '• `!pasta add [key] [value]`: Create pasta with the provided key and value with embedded arguments. Example: `!pasta add greet Hello {{user1}} and {{user2}}!`',
-            '• `!pasta remove [key]`: Remove pasta with the provided key.'
+            '>>> `!pasta help`: View usage instructions for Pasta Bot.',
+            '`!pasta list`: View list of currently available pastas.',
+            '`!pasta [key] [?args]`: View pasta corresponding to the provided key. Example: `!pasta greet &user1 Thing 1 &user2 Thing 2`',
+            '`!pasta args [key]`: View the usage instructions for the pasta with the provided key.',
+            '`!pasta add [key] [value]`: Create pasta with the provided key and value with embedded arguments. Example: `!pasta add greet Hello {{user1}} and {{user2}}!`',
+            '`!pasta remove [key]`: Remove pasta with the provided key.'
         ].join('\n'));
     }
 
