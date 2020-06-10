@@ -13,6 +13,7 @@ module.exports = (bot, store) => async message => {
             '>>> `!stats help`: View usage instructions for Stat Bot.',
             '`!stats reacts`: View a list of the most popular reacts in Mega Chat.',
             '`!stats popular`: View the most popular members (based on reacts) in Mega Chat.',
+            '`!stats status`: View clerical information about Stat Bot.'
         ].join('\n'));
     }
 

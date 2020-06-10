@@ -35,7 +35,7 @@ module.exports = async () => {
                 : (await messagesCollection.find({}, { limit: 1 }).sort('timestamp', -1).toArray())[0];
         },
         archiveMessages: async messages => {
-            await messagesCollection.insertMany(messages);
+            messages.length > 0 && await messagesCollection.insertMany(messages);
         }
     };
 };
