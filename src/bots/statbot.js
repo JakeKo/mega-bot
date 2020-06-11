@@ -26,7 +26,7 @@ module.exports = (bot, store) => async message => {
         message.channel.send([
             '**STAT BOT STATUS**',
             `>>> Messages Ingested: **${messages.length}**`,
-            `Last Ingested Message: **${new Date(lastMessage.timestamp).toLocaleString()}**`
+            `Last Ingested Message: **${new Date(lastMessage.timestamp).toUTCString()}**`
         ].join('\n'));
     }
 
