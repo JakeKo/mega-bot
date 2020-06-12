@@ -63,16 +63,12 @@ module.exports = (bot, store) => async message => {
     }
 };
 
-async function getDisplayName(key, bot) {
-    let displayName = '';
-
-    try {
-        displayName = (await bot.guilds.cache.first().members.fetch(key)).displayName;
-    } catch {
-        console.log(`Bad User ID: ${key}`);
-    }
-
-    return displayName;
+async function getDisplayNames(bot) {
+    const members = await bot.guilds.cache.first().members.fetch();
+    return members.reduce((all, m) => ({
+        ...all,
+        [m.id]: m.displayName
+    }), {});
 }
 
 function modelReactPopularityData(messages) {
@@ -97,18 +93,20 @@ function plotReactPopularityData(reacts) {
 }
 
 async function modelUserPopularityData(messages, bot) {
+    const displayNames = await getDisplayNames(bot);
     const popularity = {};
 
     messages.forEach(({ author, reacts }) => {
         popularity[author] = popularity[author] === undefined ? reacts.length : popularity[author] + reacts.length;
     });
 
-    return (await Promise.all(Object.keys(popularity)
+    return Object.keys(popularity)
         .filter(key => !config.STATBOT_ID_BLACKLIST.includes(key))
-        .map(async key => ({
-            userId: await getDisplayName(key, bot),
+        .map(key => ({
+            userId: displayNames[key] || 'NO NAME',
             reactCount: popularity[key]
-        })))).sort((a, b) => a.reactCount >= b.reactCount ? -1 : 1);
+        }))
+        .sort((a, b) => a.reactCount >= b.reactCount ? -1 : 1);
 }
 
 function plotUserPopularityData(users) {
