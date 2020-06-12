@@ -5,7 +5,7 @@ module.exports = (bot, store) => async message => {
     const statsStatus = /^!stats +status/;
     const statsReacts = /^!stats +reacts/;
     const statsPopular = /^!stats +popular/;
-    const statsSupportive = /^!stats +supportive/;
+    const statsSupportive = /^!stats +supportive(.*)/;
 
     // Check if the message matches '!stats help'
     if (statsHelp.test(message.content)) {
@@ -55,20 +55,39 @@ module.exports = (bot, store) => async message => {
         ].join('\n'));
     }
 
-    // Check if the messages matches '!stats supportive'
+    // Check if the messages matches '!stats supportive [?user]'
     else if (statsSupportive.test(message.content)) {
+        const [, userQuery] = message.content.match(statsSupportive);
         const messages = await store.getMessages();
-        const supportiveData = modelSupportiveData(messages);
-        console.log(supportiveData);
+        const displayNames = await getDisplayNames(bot);
+
+        // Check if no user was provided
+        if (userQuery.trim() === '') {
+            const supportiveData = await modelGlobalSupportiveData(messages, displayNames);
+            message.channel.send(plotGlobalSupportiveData(supportiveData));
+        } else {
+            const targetUsers = searchUsers(userQuery.trim(), displayNames);
+
+            if (targetUsers.length === 1) {
+                const supportiveData = await modelIndividualSupportiveData(messages, targetUsers[0], displayNames);
+                message.channel.send(plotIndividualSupportiveData(supportiveData, displayNames[targetUsers[0]]));
+            } else if (targetUsers.length === 0) {
+                message.channel.send(`Cannot show supportive data. No user name matches query "${userQuery.trim()}".`);
+            } else {
+                message.channel.send(`Cannot show supportive data. More than one user matches query "${userQuery.trim()}" (${targetUsers.map(id => displayNames[id]).join(', ')}).`);
+            }
+        }
     }
 };
 
 async function getDisplayNames(bot) {
     const members = await bot.guilds.cache.first().members.fetch();
-    return members.reduce((all, m) => ({
-        ...all,
-        [m.id]: m.displayName
-    }), {});
+    return members.reduce((all, m) => ({ ...all, [m.id]: m.displayName }), {});
+}
+
+// Returns the IDs of users whose display name matches the query
+function searchUsers(query, displayNames) {
+    return Object.keys(displayNames).filter(id => displayNames[id].toLowerCase().includes(query.toLowerCase()));
 }
 
 function modelReactPopularityData(messages) {
@@ -117,18 +136,53 @@ function plotUserPopularityData(users) {
     return users.map(({ userId, reactCount }) => `\`${userId.padStart(maxLabelLength, ' ')}\`: ${Array(Math.round(maxWidth * reactCount / maxValue) + 1).join('█')} ${reactCount}`);
 }
 
-function modelSupportiveData(messages) {
-    const supports = {};
+async function modelIndividualSupportiveData(messages, user, displayNames) {
+    const support = {};
     
-    messages.forEach(({ author, reacts }) => {
-        const support = supports[author] === undefined ? {} : { ...supports[author] };
-        
-        reacts.forEach(({ user }) => {
-            support[user] = support[user] === undefined ? 1 : support[user] + 1;
-        });
+    messages
+        .filter(m => m.author === user)
+        .forEach(({ reacts }) => reacts.forEach(({ user }) => support[displayNames[user]] = 1 + support[displayNames[user]] || 0));
 
-        supports[author] = support;
-    });
+    return Object.keys(support).map(id => ({ userId: id, reactCount: support[id] }));
+}
 
-    return supports;
+async function modelGlobalSupportiveData(messages, displayNames) {
+    const support = {};
+
+    messages
+        .forEach(({ reacts }) => reacts.forEach(({ user }) => support[displayNames[user]] = 1 + support[displayNames[user]] || 0));
+
+    return Object.keys(support).map(id => ({ userId: id, reactCount: support[id] }));
+}
+
+function plotIndividualSupportiveData(data, user) {
+    const maxLabelLength = Math.max(...data.map(user => user.userId.length));
+    const maxValue = Math.max(...data.map(user => user.reactCount));
+    const maxWidth = 15;
+
+    return [
+        `**Most Supportive Users of ${user} (by React Count):**`,
+        '',
+        ...data.map(({ userId, reactCount }) => {
+            const label = userId.padStart(maxLabelLength, ' ');
+            const bar = Array(Math.round(maxWidth * reactCount / maxValue) + 1).join('█');
+            return `\`${label}\`: ${bar} ${reactCount}`;
+        })
+    ].join('\n');
+}
+
+function plotGlobalSupportiveData(data) {
+    const maxLabelLength = Math.max(...data.map(user => user.userId.length));
+    const maxValue = Math.max(...data.map(user => user.reactCount));
+    const maxWidth = 15;
+
+    return [
+        '**Most Supportive Users in Mega Chat (by React Count):**',
+        '',
+        ...data.map(({ userId, reactCount }) => {
+            const label = userId.padStart(maxLabelLength, ' ');
+            const bar = Array(Math.round(maxWidth * reactCount / maxValue) + 1).join('█');
+            return `\`${label}\`: ${bar} ${reactCount}`;
+        })
+    ].join('\n');
 }
