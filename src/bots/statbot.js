@@ -10,8 +10,9 @@ module.exports = (bot, store) => async message => {
         message.channel.send([
             '**Usage Intstructions for Stat Bot:**',
             '>>> `!stats help`: View usage instructions for Stat Bot.',
-            '`!stats reacts`: View a list of the most popular reacts in Mega Chat. Filter by the optional user.',
-            '`!stats popular`: View the most popular members (based on reacts) in Mega Chat.',
+            '`!stats reacts`: View the most popular reacts.',
+            '`!stats popular`: View the most popular users.',
+            '`!stats supportive [?user]`: View the most supportive users (of the optional user). Use plain text to search users. Do not mention directly.',
             '`!stats status`: View clerical information about Stat Bot.'
         ].join('\n'));
     }
@@ -40,7 +41,8 @@ module.exports = (bot, store) => async message => {
     // Check if the message matches '!stats popular'
     else if (statsPopular.test(message.content)) {
         const messages = await store.getMessages();
-        const popularity = (await modelUserPopularityData(messages, bot)).slice(0, 10);
+        const displayNames = await getDisplayNames(bot);
+        const popularity = modelUserPopularityData(messages, displayNames).slice(0, 10);
 
         message.channel.send(plotUserPopularityData(popularity));
     }
@@ -53,14 +55,14 @@ module.exports = (bot, store) => async message => {
 
         // Check if no user was provided
         if (userQuery.trim() === '') {
-            const supportiveData = await modelGlobalSupportiveData(messages, displayNames);
+            const supportiveData = modelGlobalSupportiveData(messages, displayNames).slice(0, 10);
             message.channel.send(plotGlobalSupportiveData(supportiveData));
         } else {
             const targetUsers = searchUsers(userQuery.trim(), displayNames);
 
             // Check how many users matched the provided user query
             if (targetUsers.length === 1) {
-                const supportiveData = await modelIndividualSupportiveData(messages, targetUsers[0], displayNames);
+                const supportiveData = modelIndividualSupportiveData(messages, targetUsers[0], displayNames).slice(0, 10);
                 message.channel.send(plotIndividualSupportiveData(supportiveData, displayNames[targetUsers[0]]));
             } else if (targetUsers.length === 0) {
                 message.channel.send(`Cannot show supportive data. No user name matches query "${userQuery.trim()}".`);
@@ -102,8 +104,7 @@ function plotReactPopularityData(data) {
     const maxWidth = 20;
 
     return [
-        'Most Popular Reacts in Mega Chat',
-        '',
+        '**Most Popular Reacts:**',
         ...data.map(({ reactId, count }) => {
             const bar = Array(Math.round(maxWidth * count / maxValue) + 1).join('█');
             return `${reactId} ${bar} ${count}`;
@@ -112,7 +113,7 @@ function plotReactPopularityData(data) {
 }
 
 // USER POPULARITY DATA
-async function modelUserPopularityData(messages, displayNames) {
+function modelUserPopularityData(messages, displayNames) {
     const popularity = {};
     messages.forEach(({ author, reacts }) => {
         const displayName = displayNames[author] || 'NO NAME';
@@ -130,8 +131,7 @@ function plotUserPopularityData(data) {
     const maxWidth = 15;
 
     return [
-        'Most Popular Users in Mega Chat (by React Count)',
-        '',
+        '**Most Popular Users (by React Count):**',
         ...data.map(({ userId, reactCount }) => {
             const label = userId.padStart(maxLabelLength, ' ');
             const bar = Array(Math.round(maxWidth * reactCount / maxValue) + 1).join('█');
@@ -141,7 +141,7 @@ function plotUserPopularityData(data) {
 }
 
 // INDIVIDUAL SUPPORTIVE DATA
-async function modelIndividualSupportiveData(messages, user, displayNames) {
+function modelIndividualSupportiveData(messages, user, displayNames) {
     const support = {};
     messages.filter(m => m.author === user).forEach(({ reacts }) => {
         reacts.forEach(({ user }) => {
@@ -162,7 +162,6 @@ function plotIndividualSupportiveData(data, user) {
 
     return [
         `**Most Supportive Users of ${user} (by React Count):**`,
-        '',
         ...data.map(({ userId, reactCount }) => {
             const label = userId.padStart(maxLabelLength, ' ');
             const bar = Array(Math.round(maxWidth * reactCount / maxValue) + 1).join('█');
@@ -172,7 +171,7 @@ function plotIndividualSupportiveData(data, user) {
 }
 
 // GLOBAL SUPPORTIVE DATA
-async function modelGlobalSupportiveData(messages, displayNames) {
+function modelGlobalSupportiveData(messages, displayNames) {
     const support = {};
     messages.forEach(({ reacts }) => {
         reacts.forEach(({ user }) => {
@@ -192,8 +191,7 @@ function plotGlobalSupportiveData(data) {
     const maxWidth = 15;
 
     return [
-        '**Most Supportive Users in Mega Chat (by React Count):**',
-        '',
+        '**Most Supportive Users (by React Count):**',
         ...data.map(({ userId, reactCount }) => {
             const label = userId.padStart(maxLabelLength, ' ');
             const bar = Array(Math.round(maxWidth * reactCount / maxValue) + 1).join('█');
