@@ -1,7 +1,7 @@
 module.exports = (bot, store) => async message => {
     const statsHelp = /^!stats +help/;
     const statsStatus = /^!stats +status/;
-    const statsReacts = /^!stats +reacts/;
+    const statsReacts = /^!stats +reacts(.*)/;
     const statsPopular = /^!stats +popular/;
     const statsSupportive = /^!stats +supportive(.*)/;
 
@@ -10,7 +10,7 @@ module.exports = (bot, store) => async message => {
         message.channel.send([
             '**Usage Intstructions for Stat Bot:**',
             '>>> `!stats help`: View usage instructions for Stat Bot.',
-            '`!stats reacts`: View the most popular reacts.',
+            '`!stats reacts [?user]`: View the most popular reacts (of the optional user). Use plain text to search users. Do not mention directly.',
             '`!stats popular`: View the most popular users.',
             '`!stats supportive [?user]`: View the most supportive users (of the optional user). Use plain text to search users. Do not mention directly.',
             '`!stats status`: View clerical information about Stat Bot.'
@@ -30,12 +30,30 @@ module.exports = (bot, store) => async message => {
         ].join('\n'));
     }
 
-    // Check if the message matches '!stats reacts'
+    // Check if the message matches '!stats reacts [?user]'
     else if (statsReacts.test(message.content)) {
+        const [, userQuery] = message.content.match(statsReacts);
         const messages = await store.getMessages();
-        const popularity = modelReactPopularityData(messages).slice(0, 10);
 
-        message.channel.send(plotReactPopularityData(popularity));
+        if (userQuery.trim() === '') {
+            const reactPopularityData = modelGlobalReactPopularityData(messages).slice(0, 10);
+            message.channel.send(plotGlobalReactPopularityData(reactPopularityData));
+        } else {
+            const displayNames = await getDisplayNames(bot);
+            const targetUsers = searchUsers(userQuery.trim(), displayNames);
+
+            // Check how many users matched the provided user query
+            if (targetUsers.length === 1) {
+                const reactPopularityData = modelIndividualReactPopularityData(messages, targetUsers[0]).slice(0, 10);
+                message.channel.send(plotIndividualReactPopularityData(reactPopularityData, displayNames[targetUsers[0]]));
+            } else if (targetUsers.length === 0) {
+                message.channel.send(`Cannot show react popularity data. No user name matches query "${userQuery.trim()}".`);
+            } else {
+                message.channel.send(`Cannot show react popularity data. More than one user matches query "${userQuery.trim()}" (${targetUsers.map(id => displayNames[id]).join(', ')}).`);
+            }
+        }
+
+
     }
 
     // Check if the message matches '!stats popular'
@@ -84,13 +102,13 @@ function searchUsers(query, displayNames) {
     return Object.keys(displayNames).filter(id => displayNames[id].toLowerCase().includes(query.toLowerCase()));
 }
 
-// REACT POPULARITY DATA
-function modelReactPopularityData(messages) {
+// INDIVIDUAL REACT POPULARITY DATA
+function modelIndividualReactPopularityData(messages, user) {
     const popularity = {};
 
-    messages.forEach(({ reacts }) => {
+    messages.filter(m => m.author === user).forEach(({ reacts }) => {
         reacts.forEach(({ react }) => {
-            popularity[react] = 1 + popularity[react] || 0;
+            popularity[react] = 1 + (popularity[react] || 0);
         });
     });
 
@@ -99,7 +117,34 @@ function modelReactPopularityData(messages) {
         .sort((a, b) => a.count >= b.count ? -1 : 1);
 }
 
-function plotReactPopularityData(data) {
+function plotIndividualReactPopularityData(data, user) {
+    const maxValue = Math.max(...data.map(react => react.count));
+    const maxWidth = 20;
+
+    return [
+        `**Most Popular Reacts by ${user}:**`,
+        ...data.map(({ reactId, count }) => {
+            const bar = Array(Math.round(maxWidth * count / maxValue) + 1).join('█');
+            return `${reactId} ${bar} ${count}`;
+        })
+    ].join('\n');
+}
+
+// GLOBAL REACT POPULARITY DATA
+function modelGlobalReactPopularityData(messages) {
+    const popularity = {};
+    messages.forEach(({ reacts }) => {
+        reacts.forEach(({ react }) => {
+            popularity[react] = 1 + (popularity[react] || 0);
+        });
+    });
+
+    return Object.keys(popularity)
+        .map(id => ({ reactId: id, count: popularity[id] }))
+        .sort((a, b) => a.count >= b.count ? -1 : 1);
+}
+
+function plotGlobalReactPopularityData(data) {
     const maxValue = Math.max(...data.map(react => react.count));
     const maxWidth = 20;
 
@@ -117,7 +162,7 @@ function modelUserPopularityData(messages, displayNames) {
     const popularity = {};
     messages.forEach(({ author, reacts }) => {
         const displayName = displayNames[author] || 'NO NAME';
-        popularity[displayName] = reacts.length + popularity[displayName] || 0;
+        popularity[displayName] = reacts.length + (popularity[displayName] || 0);
     });
 
     return Object.keys(popularity)
@@ -146,7 +191,7 @@ function modelIndividualSupportiveData(messages, user, displayNames) {
     messages.filter(m => m.author === user).forEach(({ reacts }) => {
         reacts.forEach(({ user }) => {
             const displayName = displayNames[user] || 'NO NAME';
-            support[displayName] = 1 + support[displayName] || 0;
+            support[displayName] = 1 + (support[displayName] || 0);
         });
     });
 
@@ -176,7 +221,7 @@ function modelGlobalSupportiveData(messages, displayNames) {
     messages.forEach(({ reacts }) => {
         reacts.forEach(({ user }) => {
             const displayName = displayNames[user] || 'NO NAME';
-            support[displayName] = 1 + support[displayName] || 0;
+            support[displayName] = 1 + (support[displayName] || 0);
         });
     });
 
