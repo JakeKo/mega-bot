@@ -1,8 +1,11 @@
+// TODO: Implement handling of user mentions
+// TODO: Implement handling of no data
+
 module.exports = (bot, store) => async message => {
     const statsHelp = /^!stats +help/;
     const statsStatus = /^!stats +status/;
     const statsReacts = /^!stats +reacts(.*)/;
-    const statsPopular = /^!stats +popular/;
+    const statsPopular = /^!stats +popular(.*)/;
     const statsSupportive = /^!stats +supportive(.*)/;
 
     // Check if the message matches '!stats help'
@@ -11,7 +14,7 @@ module.exports = (bot, store) => async message => {
             '**Usage Intstructions for Stat Bot:**',
             '>>> `!stats help`: View usage instructions for Stat Bot.',
             '`!stats reacts [?user]`: View the most popular reacts (of the optional user). Use plain text to search users. Do not mention directly.',
-            '`!stats popular`: View the most popular users.',
+            '`!stats popular [?user]`: View the most popular users (of the optional user). Use plain text to search users. Do not mention directly.',
             '`!stats supportive [?user]`: View the most supportive users (of the optional user). Use plain text to search users. Do not mention directly.',
             '`!stats status`: View clerical information about Stat Bot.'
         ].join('\n'));
@@ -56,13 +59,29 @@ module.exports = (bot, store) => async message => {
 
     }
 
-    // Check if the message matches '!stats popular'
+    // Check if the message matches '!stats popular [?user]'
     else if (statsPopular.test(message.content)) {
+        const [, userQuery] = message.content.match(statsPopular);
         const messages = await store.getMessages();
         const displayNames = await getDisplayNames(bot);
-        const popularity = modelUserPopularityData(messages, displayNames).slice(0, 10);
 
-        message.channel.send(plotUserPopularityData(popularity));
+        // Check if no user was provided
+        if (userQuery.trim() === '') {
+            const popularityData = modelGlobalUserPopularityData(messages, displayNames).slice(0, 10);
+            message.channel.send(plotGlobalUserPopularityData(popularityData));
+        } else {
+            const targetUsers = searchUsers(userQuery.trim(), displayNames);
+
+            // Check how many users matched the provided user query
+            if (targetUsers.length === 1) {
+                const popularityData = modelIndividualUserPopularityData(messages, targetUsers[0], displayNames).slice(0, 10);
+                message.channel.send(plotIndividualUserPopularityData(popularityData, displayNames[targetUsers[0]]));
+            } else if (targetUsers.length === 0) {
+                message.channel.send(`Cannot show popularity data. No user name matches query "${userQuery.trim()}".`);
+            } else {
+                message.channel.send(`Cannot show popularity data. More than one user matches query "${userQuery.trim()}" (${targetUsers.map(id => displayNames[id]).join(', ')}).`);
+            }
+        }
     }
 
     // Check if the messages matches '!stats supportive [?user]'
@@ -157,8 +176,36 @@ function plotGlobalReactPopularityData(data) {
     ].join('\n');
 }
 
-// USER POPULARITY DATA
-function modelUserPopularityData(messages, displayNames) {
+// INDIVIDUAL USER POPULARITY DATA
+function modelIndividualUserPopularityData(messages, user, displayNames) {
+    const popularity = {};
+    messages.forEach(({ author, reacts }) => {
+        const displayName = displayNames[author] || 'NO NAME';
+        popularity[displayName] = reacts.filter(r => r.user === user).length + (popularity[displayName] || 0);
+    });
+
+    return Object.keys(popularity)
+        .map(id => ({ userId: id, reactCount: popularity[id] }))
+        .sort((a, b) => a.reactCount >= b.reactCount ? -1 : 1);
+}
+
+function plotIndividualUserPopularityData(data, user) {
+    const maxLabelLength = Math.max(...data.map(user => user.userId.length));
+    const maxValue = Math.max(...data.map(user => user.reactCount));
+    const maxWidth = 15;
+
+    return [
+        `**Most Popular Users According to ${user}:**`,
+        ...data.map(({ userId, reactCount }) => {
+            const label = userId.padStart(maxLabelLength, ' ');
+            const bar = Array(Math.round(maxWidth * reactCount / maxValue) + 1).join('█');
+            return `\`${label}\`: ${bar} ${reactCount}`;
+        })
+    ].join('\n');
+}
+
+// GLOBAL USER POPULARITY DATA
+function modelGlobalUserPopularityData(messages, displayNames) {
     const popularity = {};
     messages.forEach(({ author, reacts }) => {
         const displayName = displayNames[author] || 'NO NAME';
@@ -170,13 +217,13 @@ function modelUserPopularityData(messages, displayNames) {
         .sort((a, b) => a.reactCount >= b.reactCount ? -1 : 1);
 }
 
-function plotUserPopularityData(data) {
+function plotGlobalUserPopularityData(data) {
     const maxLabelLength = Math.max(...data.map(user => user.userId.length));
     const maxValue = Math.max(...data.map(user => user.reactCount));
     const maxWidth = 15;
 
     return [
-        '**Most Popular Users (by React Count):**',
+        '**Most Popular Users:**',
         ...data.map(({ userId, reactCount }) => {
             const label = userId.padStart(maxLabelLength, ' ');
             const bar = Array(Math.round(maxWidth * reactCount / maxValue) + 1).join('█');
@@ -206,7 +253,7 @@ function plotIndividualSupportiveData(data, user) {
     const maxWidth = 15;
 
     return [
-        `**Most Supportive Users of ${user} (by React Count):**`,
+        `**Most Supportive Users of ${user}:**`,
         ...data.map(({ userId, reactCount }) => {
             const label = userId.padStart(maxLabelLength, ' ');
             const bar = Array(Math.round(maxWidth * reactCount / maxValue) + 1).join('█');
@@ -236,7 +283,7 @@ function plotGlobalSupportiveData(data) {
     const maxWidth = 15;
 
     return [
-        '**Most Supportive Users (by React Count):**',
+        '**Most Supportive Users:**',
         ...data.map(({ userId, reactCount }) => {
             const label = userId.padStart(maxLabelLength, ' ');
             const bar = Array(Math.round(maxWidth * reactCount / maxValue) + 1).join('█');
