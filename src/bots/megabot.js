@@ -1,6 +1,7 @@
 module.exports = () => message => {
     const megaContribute = /^!mega +contribute/;
     const megaLinks = /^!mega +links/;
+    const megaRequest = /^!mega +request/;
     const megaHelp = /^!mega +help/;
 
     // Check if the message matches '!mega contribute'
@@ -20,12 +21,17 @@ module.exports = () => message => {
         ].join('\n'));
     }
 
+    else if (megaRequest.test(message.content)) {
+        message.channel.send('IOU one (1) feature request command');
+    }
+
     // Check if the message matches '!mega help'
     else if (megaHelp.test(message.content)) {
         message.channel.send([
             '**Usage Intstructions for Mega Bot:**',
             '>>> `!mega contribute`: Learn about how to contribute to Mega Bot.',
             '`!mega links`: View a list of helpful links.',
+            '`!mega request`: Request a new Mega Bot feature.',
             '`!mega help`: View usage instructions for Mega Bot.',
             '`!pasta help`: View usage instructions for Pasta Bot.',
             '`!stats help`: View usage instructions for Stat Bot.',
