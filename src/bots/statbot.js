@@ -1,6 +1,8 @@
 // TODO: Implement handling of user mentions
 // TODO: Implement handling of no data
 
+const { getDisplayNames } = require('../utilities');
+
 module.exports = (bot, store) => async message => {
     const statsHelp = /^!stats +help/;
     const statsStatus = /^!stats +status/;
@@ -109,12 +111,6 @@ module.exports = (bot, store) => async message => {
         }
     }
 };
-
-// Create a map of user IDs to user display names
-async function getDisplayNames(bot) {
-    const members = await bot.guilds.cache.first().members.fetch();
-    return members.reduce((all, m) => ({ ...all, [m.id]: m.displayName }), {});
-}
 
 // Returns the IDs of users whose display name matches the query
 function searchUsers(query, displayNames) {
