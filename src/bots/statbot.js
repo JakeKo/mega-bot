@@ -1,6 +1,3 @@
-// TODO: Implement handling of user mentions
-// TODO: Implement handling of no data
-
 const { getDisplayNames, cacheDisplayNames } = require('../utilities');
 
 module.exports = (bot, store) => async message => {
@@ -29,7 +26,6 @@ module.exports = (bot, store) => async message => {
         const messages = await store.getMessages();
         const lastMessage = await store.getLastMessage();
 
-        // TODO: Include timestamp of last archive run and next archive run
         message.channel.send([
             '**STAT BOT STATUS**',
             `>>> Messages Ingested: **${messages.length}**`,
@@ -43,14 +39,18 @@ module.exports = (bot, store) => async message => {
         const messages = await store.getMessages();
 
         if (userQuery.trim() === '') {
-            const reactPopularityData = modelGlobalReactPopularityData(messages).slice(0, 10);
-            message.channel.send(plotGlobalReactPopularityData(reactPopularityData));
+            const data = modelGlobalReactPopularityData(messages).slice(0, 10);
+            data.length === 0
+                ? message.channel.send('No data available for the provided command.')
+                : message.channel.send(plotGlobalReactPopularityData(data));
         } else {
             const result = evaluateUserQuery(userQuery);
 
             if (result.success) {
                 const data = modelIndividualReactPopularityData(messages, result.user).slice(0, 10);
-                message.channel.send(plotIndividualReactPopularityData(data, getDisplayNames()[result.user]));
+                data.length === 0
+                    ? message.channel.send('No data available for the provided command.')
+                    : message.channel.send(plotIndividualReactPopularityData(data, getDisplayNames()[result.user]));
             } else {
                 message.channel.send(result.message);
             }
@@ -64,14 +64,18 @@ module.exports = (bot, store) => async message => {
 
         // Check if no user was provided
         if (userQuery.trim() === '') {
-            const popularityData = modelGlobalUserPopularityData(messages).slice(0, 10);
-            message.channel.send(plotGlobalUserPopularityData(popularityData));
+            const data = modelGlobalUserPopularityData(messages).slice(0, 10);
+            data.length === 0
+                ? message.channel.send('No data available for the provided command.')
+                : message.channel.send(plotGlobalUserPopularityData(data));
         } else {
             const result = evaluateUserQuery(userQuery);
 
             if (result.success) {
                 const data = modelIndividualUserPopularityData(messages, result.user).slice(0, 10);
-                message.channel.send(plotIndividualUserPopularityData(data, getDisplayNames()[result.user]));
+                data.length === 0
+                    ? message.channel.send('No data available for the provided command.')
+                    : message.channel.send(plotIndividualUserPopularityData(data, getDisplayNames()[result.user]));
             } else {
                 message.channel.send(result.message);
             }
@@ -85,14 +89,18 @@ module.exports = (bot, store) => async message => {
 
         // Check if no user was provided
         if (userQuery.trim() === '') {
-            const supportiveData = modelGlobalSupportiveData(messages).slice(0, 10);
-            message.channel.send(plotGlobalSupportiveData(supportiveData));
+            const data = modelGlobalSupportiveData(messages).slice(0, 10);
+            data.length === 0
+                ? message.channel.send('No data available for the provided command.')
+                : message.channel.send(plotGlobalSupportiveData(data));
         } else {
             const result = evaluateUserQuery(userQuery);
 
             if (result.success) {
                 const data = modelIndividualSupportiveData(messages, result.user).slice(0, 10);
-                message.channel.send(plotIndividualSupportiveData(data, getDisplayNames()[result.user]));
+                data.length === 0
+                    ? message.channel.send('No data available for the provided command.')
+                    : message.channel.send(plotIndividualSupportiveData(data, getDisplayNames()[result.user]));
             } else {
                 message.channel.send(result.message);
             }

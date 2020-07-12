@@ -5,7 +5,6 @@ module.exports = function archive(bot, store) {
     return async () => {
         console.log(`BEGIN ARCHIVE RUN ${++archiveCounter}`);
 
-        // TODO: Consider performance/rate-limit impact of changing this dynamically
         // Get the id of the most recent message in the channel
         const guild = bot.guilds.cache.first();
         const channel = guild.channels.resolve(config.STATBOT_CHANNEL_ID);

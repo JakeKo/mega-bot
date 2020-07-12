@@ -14,8 +14,7 @@ module.exports = bot => async message => {
     if (megaContribute.test(message.content)) {
         message.channel.send('Want to help make Mega Bot better? Check out the open source repsitory: https://github.com/JakeKo/mega-bot');
     }
-    
-    // TODO: Add links to UNL homepage, CAPS, Ivory Tower, etc.
+
     // Check if the message matches '!mega links'
     else if (megaLinks.test(message.content)) {
         message.channel.send([
