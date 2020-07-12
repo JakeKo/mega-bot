@@ -1,7 +1,7 @@
 // TODO: Implement handling of user mentions
 // TODO: Implement handling of no data
 
-const { getDisplayNames } = require('../utilities');
+const { getDisplayNames, cacheDisplayNames } = require('../utilities');
 
 module.exports = (bot, store) => async message => {
     const statsHelp = /^!stats +help/;
@@ -9,6 +9,8 @@ module.exports = (bot, store) => async message => {
     const statsReacts = /^!stats +reacts(.*)/;
     const statsPopular = /^!stats +popular(.*)/;
     const statsSupportive = /^!stats +supportive(.*)/;
+    
+    await cacheDisplayNames(bot);
 
     // Check if the message matches '!stats help'
     if (statsHelp.test(message.content)) {
@@ -44,44 +46,34 @@ module.exports = (bot, store) => async message => {
             const reactPopularityData = modelGlobalReactPopularityData(messages).slice(0, 10);
             message.channel.send(plotGlobalReactPopularityData(reactPopularityData));
         } else {
-            const displayNames = await getDisplayNames(bot);
-            const targetUsers = searchUsers(userQuery.trim(), displayNames);
+            const result = evaluateUserQuery(userQuery);
 
-            // Check how many users matched the provided user query
-            if (targetUsers.length === 1) {
-                const reactPopularityData = modelIndividualReactPopularityData(messages, targetUsers[0]).slice(0, 10);
-                message.channel.send(plotIndividualReactPopularityData(reactPopularityData, displayNames[targetUsers[0]]));
-            } else if (targetUsers.length === 0) {
-                message.channel.send(`Cannot show react popularity data. No user name matches query "${userQuery.trim()}".`);
+            if (result.success) {
+                const data = modelIndividualReactPopularityData(messages, result.user).slice(0, 10);
+                message.channel.send(plotIndividualReactPopularityData(data, getDisplayNames()[result.user]));
             } else {
-                message.channel.send(`Cannot show react popularity data. More than one user matches query "${userQuery.trim()}" (${targetUsers.map(id => displayNames[id]).join(', ')}).`);
+                message.channel.send(result.message);
             }
         }
-
-
     }
 
     // Check if the message matches '!stats popular [?user]'
     else if (statsPopular.test(message.content)) {
         const [, userQuery] = message.content.match(statsPopular);
         const messages = await store.getMessages();
-        const displayNames = await getDisplayNames(bot);
 
         // Check if no user was provided
         if (userQuery.trim() === '') {
-            const popularityData = modelGlobalUserPopularityData(messages, displayNames).slice(0, 10);
+            const popularityData = modelGlobalUserPopularityData(messages).slice(0, 10);
             message.channel.send(plotGlobalUserPopularityData(popularityData));
         } else {
-            const targetUsers = searchUsers(userQuery.trim(), displayNames);
+            const result = evaluateUserQuery(userQuery);
 
-            // Check how many users matched the provided user query
-            if (targetUsers.length === 1) {
-                const popularityData = modelIndividualUserPopularityData(messages, targetUsers[0], displayNames).slice(0, 10);
-                message.channel.send(plotIndividualUserPopularityData(popularityData, displayNames[targetUsers[0]]));
-            } else if (targetUsers.length === 0) {
-                message.channel.send(`Cannot show popularity data. No user name matches query "${userQuery.trim()}".`);
+            if (result.success) {
+                const data = modelIndividualUserPopularityData(messages, result.user).slice(0, 10);
+                message.channel.send(plotIndividualUserPopularityData(data, getDisplayNames()[result.user]));
             } else {
-                message.channel.send(`Cannot show popularity data. More than one user matches query "${userQuery.trim()}" (${targetUsers.map(id => displayNames[id]).join(', ')}).`);
+                message.channel.send(result.message);
             }
         }
     }
@@ -90,31 +82,41 @@ module.exports = (bot, store) => async message => {
     else if (statsSupportive.test(message.content)) {
         const [, userQuery] = message.content.match(statsSupportive);
         const messages = await store.getMessages();
-        const displayNames = await getDisplayNames(bot);
 
         // Check if no user was provided
         if (userQuery.trim() === '') {
-            const supportiveData = modelGlobalSupportiveData(messages, displayNames).slice(0, 10);
+            const supportiveData = modelGlobalSupportiveData(messages).slice(0, 10);
             message.channel.send(plotGlobalSupportiveData(supportiveData));
         } else {
-            const targetUsers = searchUsers(userQuery.trim(), displayNames);
+            const result = evaluateUserQuery(userQuery);
 
-            // Check how many users matched the provided user query
-            if (targetUsers.length === 1) {
-                const supportiveData = modelIndividualSupportiveData(messages, targetUsers[0], displayNames).slice(0, 10);
-                message.channel.send(plotIndividualSupportiveData(supportiveData, displayNames[targetUsers[0]]));
-            } else if (targetUsers.length === 0) {
-                message.channel.send(`Cannot show supportive data. No user name matches query "${userQuery.trim()}".`);
+            if (result.success) {
+                const data = modelIndividualSupportiveData(messages, result.user).slice(0, 10);
+                message.channel.send(plotIndividualSupportiveData(data, getDisplayNames()[result.user]));
             } else {
-                message.channel.send(`Cannot show supportive data. More than one user matches query "${userQuery.trim()}" (${targetUsers.map(id => displayNames[id]).join(', ')}).`);
+                message.channel.send(result.message);
             }
         }
     }
 };
 
 // Returns the IDs of users whose display name matches the query
-function searchUsers(query, displayNames) {
-    return Object.keys(displayNames).filter(id => displayNames[id].toLowerCase().includes(query.toLowerCase()));
+function searchUsers(query) {
+    return Object.keys(getDisplayNames()).filter(id => getDisplayNames()[id].toLowerCase().includes(query.toLowerCase()));
+}
+
+function evaluateUserQuery(userQuery) {
+    const query = userQuery.trim();
+    const targetUsers = searchUsers(query, getDisplayNames());
+
+    // Check how many users matched the provided user query
+    if (targetUsers.length === 1) {
+        return { success: true, user: targetUsers[0], message: 'Query Successful' };
+    } else if (targetUsers.length === 0) {
+        return { success: false, user: '', message: `Query Error: No user matches query "${query}".` };
+    } else {
+        return { success: false, user: '', message: `Query Error: More than one user matches query "${query}": ${targetUsers.map(id => getDisplayNames()[id]).join('\n')}` };
+    }
 }
 
 // INDIVIDUAL REACT POPULARITY DATA
@@ -173,10 +175,10 @@ function plotGlobalReactPopularityData(data) {
 }
 
 // INDIVIDUAL USER POPULARITY DATA
-function modelIndividualUserPopularityData(messages, user, displayNames) {
+function modelIndividualUserPopularityData(messages, user) {
     const popularity = {};
     messages.forEach(({ author, reacts }) => {
-        const displayName = displayNames[author] || 'NO NAME';
+        const displayName = getDisplayNames()[author] || 'NO NAME';
         popularity[displayName] = reacts.filter(r => r.user === user).length + (popularity[displayName] || 0);
     });
 
@@ -201,10 +203,10 @@ function plotIndividualUserPopularityData(data, user) {
 }
 
 // GLOBAL USER POPULARITY DATA
-function modelGlobalUserPopularityData(messages, displayNames) {
+function modelGlobalUserPopularityData(messages) {
     const popularity = {};
     messages.forEach(({ author, reacts }) => {
-        const displayName = displayNames[author] || 'NO NAME';
+        const displayName = getDisplayNames()[author] || 'NO NAME';
         popularity[displayName] = reacts.length + (popularity[displayName] || 0);
     });
 
@@ -229,11 +231,11 @@ function plotGlobalUserPopularityData(data) {
 }
 
 // INDIVIDUAL SUPPORTIVE DATA
-function modelIndividualSupportiveData(messages, user, displayNames) {
+function modelIndividualSupportiveData(messages, user) {
     const support = {};
     messages.filter(m => m.author === user).forEach(({ reacts }) => {
         reacts.forEach(({ user }) => {
-            const displayName = displayNames[user] || 'NO NAME';
+            const displayName = getDisplayNames()[user] || 'NO NAME';
             support[displayName] = 1 + (support[displayName] || 0);
         });
     });
@@ -259,11 +261,11 @@ function plotIndividualSupportiveData(data, user) {
 }
 
 // GLOBAL SUPPORTIVE DATA
-function modelGlobalSupportiveData(messages, displayNames) {
+function modelGlobalSupportiveData(messages) {
     const support = {};
     messages.forEach(({ reacts }) => {
         reacts.forEach(({ user }) => {
-            const displayName = displayNames[user] || 'NO NAME';
+            const displayName = getDisplayNames()[user] || 'NO NAME';
             support[displayName] = 1 + (support[displayName] || 0);
         });
     });

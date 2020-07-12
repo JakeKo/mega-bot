@@ -1,12 +1,14 @@
 const axios = require('axios').default;
 const config = require('../../config');
-const { getDisplayNames } = require('../utilities');
+const { getDisplayNames, cacheDisplayNames } = require('../utilities');
 
 module.exports = bot => async message => {
     const megaContribute = /^!mega +contribute/;
     const megaLinks = /^!mega +links/;
     const megaRequest = /^!mega +request +(.*)/;
     const megaHelp = /^!mega +help/;
+
+    await cacheDisplayNames(bot);
 
     // Check if the message matches '!mega contribute'
     if (megaContribute.test(message.content)) {
@@ -28,8 +30,7 @@ module.exports = bot => async message => {
     // Check if the message matches '!mega request'
     else if (megaRequest.test(message.content)) {
         const [, description] = message.content.match(megaRequest);
-        const displayNames = await getDisplayNames(bot);
-        const result = await createIssue(displayNames[message.author.id], description);
+        const result = await createIssue(getDisplayNames()[message.author.id], description);
         message.channel.send(result);
     }
 

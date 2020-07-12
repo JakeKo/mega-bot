@@ -1,5 +1,15 @@
 // Create a map of user IDs to user display names
-module.exports.getDisplayNames = async bot => {
+let displayNames = {};
+
+const getDisplayNames = () => displayNames;
+
+const cacheDisplayNames = async bot => {
     const members = await bot.guilds.cache.first().members.fetch();
-    return members.reduce((all, m) => ({ ...all, [m.id]: m.displayName }), {});
+    displayNames = members.reduce((all, m) => ({ ...all, [m.id]: m.displayName }), {});
+    return getDisplayNames();
+};
+
+module.exports = {
+    cacheDisplayNames,
+    getDisplayNames
 };
