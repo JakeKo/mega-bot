@@ -5,8 +5,8 @@
   "main": "app.js",
   "scripts": {
     "lint": "eslint ./src/**/*.js",
-    "dev": "npm run lint && cross-env NODE_ENV=development node ./src/app.js",
-    "package": "rm -rf ./build && mkdir build && cp -r ./src ./build && cp ./package.json ./build && cp ./package-lock.json ./build",
+    "dev": "npm run lint && flow && cross-env NODE_ENV=development node ./src/app.js",
+    "package": "rm -rf ./build && mkdir build && babel ./src/ -d ./build/ && cp ./package.json ./build && cp ./package-lock.json ./build",
     "config:prod": "cross-env NODE_ENV=production node ./updateConfig.js",
     "start:prod": "cross-env NODE_ENV=production forever start ./src/app.js",
     "stop:prod": "forever stop ./src/app.js",
@@ -29,7 +29,11 @@
     "mongodb": "^3.5.7"
   },
   "devDependencies": {
+    "@babel/cli": "^7.10.5",
+    "@babel/core": "^7.10.5",
+    "@babel/preset-flow": "^7.10.4",
     "eslint": "^7.1.0",
+    "flow-bin": "^0.129.0",
     "ssh2-sftp-client": "^5.2.1"
   }
 }
