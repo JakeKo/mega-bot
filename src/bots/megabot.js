@@ -1,8 +1,10 @@
+// @flow
+
 const axios = require('axios').default;
 const config = require('../../config');
 const { getDisplayNames, cacheDisplayNames } = require('../utilities');
 
-module.exports = bot => async message => {
+module.exports = (bot: any) => async (message: any) => {
     const megaContribute = /^!mega +contribute/;
     const megaLinks = /^!mega +links/;
     const megaRequest = /^!mega +request +(.*)/;
@@ -47,7 +49,7 @@ module.exports = bot => async message => {
     }
 };
 
-async function createIssue(author, description) {
+async function createIssue(author: string, description: string) {
     try {
         const { data } = await axios({
             url: 'https://api.github.com/repos/JakeKo/mega-bot/issues',
@@ -62,7 +64,7 @@ async function createIssue(author, description) {
         });
 
         return `Successfully created issue: \`[#${data.number}] ${data.title}\`.\nCheck it out here: ${data.html_url}`;
-    } catch(exception) {
+    } catch (exception) {
         console.error(exception);
         return 'Failed to create issue.';
     }
