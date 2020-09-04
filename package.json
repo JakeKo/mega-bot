@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint ./src/**/*.js",
     "dev": "npm run lint && flow && cross-env NODE_ENV=development node ./src/app.js",
-    "package": "rm -rf ./build && mkdir build && babel ./src/ -d ./build/ && cp ./package.json ./build && cp ./package-lock.json ./build",
+    "package": "rm -rf ./build && mkdir -p build && babel ./src/ -d ./build/src && cp ./package.json ./build && cp ./package-lock.json ./build",
     "config:prod": "cross-env NODE_ENV=production node ./updateConfig.js",
     "start:prod": "cross-env NODE_ENV=production forever start ./src/app.js",
     "stop:prod": "forever stop ./src/app.js",
@@ -26,7 +26,7 @@
     "axios": "^0.19.2",
     "cross-env": "^7.0.2",
     "discord.js": "^12.2.0",
-    "mongodb": "^3.5.7"
+    "mongodb": "^3.6.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.5",

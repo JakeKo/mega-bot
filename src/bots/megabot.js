@@ -49,9 +49,16 @@ module.exports = (bot: any) => async (message: any) => {
     }
 };
 
+type GithubCreateIssueResponse = {
+    data: {
+        number: number;
+        title: string;
+        html_url: string;
+    }
+};
 async function createIssue(author: string, description: string) {
     try {
-        const { data } = await axios({
+        const { data }: GithubCreateIssueResponse = await axios({
             url: 'https://api.github.com/repos/JakeKo/mega-bot/issues',
             method: 'POST',
             headers: {
