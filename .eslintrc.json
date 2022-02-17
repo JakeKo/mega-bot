@@ -31,8 +31,5 @@
             "always"
         ]
     },
-    "parser": "babel-eslint",
-    "plugins": [
-        "flowtype"
-    ]
+    "parser": "babel-eslint"
 }

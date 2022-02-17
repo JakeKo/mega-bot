@@ -11,6 +11,7 @@ module.exports = (bot, store) => async message => {
 
     // Check if the message matches '!stats help'
     if (statsHelp.test(message.content)) {
+        console.log(message.content);
         message.channel.send([
             '**Usage Intstructions for Stat Bot:**',
             '>>> `!stats help`: View usage instructions for Stat Bot.',

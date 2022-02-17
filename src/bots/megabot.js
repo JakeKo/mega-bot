@@ -1,16 +1,14 @@
-// @flow
+// const axios = require('axios').default;
+// const config = require('../../config');
+// const { getDisplayNames, cacheDisplayNames } = require('../utilities');
 
-const axios = require('axios').default;
-const config = require('../../config');
-const { getDisplayNames, cacheDisplayNames } = require('../utilities');
-
-module.exports = (bot: any) => async (message: any) => {
+module.exports = () => async (message) => {
     const megaContribute = /^!mega +contribute/;
     const megaLinks = /^!mega +links/;
-    const megaRequest = /^!mega +request +(.*)/;
+    // const megaRequest = /^!mega +request +(.*)/;
     const megaHelp = /^!mega +help/;
 
-    await cacheDisplayNames(bot);
+    // await cacheDisplayNames(bot);
 
     // Check if the message matches '!mega contribute'
     if (megaContribute.test(message.content)) {
@@ -29,11 +27,11 @@ module.exports = (bot: any) => async (message: any) => {
     }
 
     // Check if the message matches '!mega request'
-    else if (megaRequest.test(message.content)) {
-        const [, description] = message.content.match(megaRequest);
-        const result = await createIssue(getDisplayNames()[message.author.id], description);
-        message.channel.send(result);
-    }
+    // else if (megaRequest.test(message.content)) {
+    //     const [, description] = message.content.match(megaRequest);
+    //     const result = await createIssue(getDisplayNames()[message.author.id], description);
+    //     message.channel.send(result);
+    // }
 
     // Check if the message matches '!mega help'
     else if (megaHelp.test(message.content)) {
@@ -41,38 +39,31 @@ module.exports = (bot: any) => async (message: any) => {
             '**Usage Intstructions for Mega Bot:**',
             '>>> `!mega contribute`: Learn about how to contribute to Mega Bot.',
             '`!mega links`: View a list of helpful links.',
-            '`!mega request`: Request a new Mega Bot feature.',
+            '`!mega request`: Request a new Mega Bot feature. _Down for maintenance_',
             '`!mega help`: View usage instructions for Mega Bot.',
             '`!pasta help`: View usage instructions for Pasta Bot.',
-            '`!stats help`: View usage instructions for Stat Bot.',
+            '`!stats help`: View usage instructions for Stat Bot. _Down for maintenance_',
         ].join('\n'));
     }
 };
 
-type GithubCreateIssueResponse = {
-    data: {
-        number: number;
-        title: string;
-        html_url: string;
-    }
-};
-async function createIssue(author: string, description: string) {
-    try {
-        const { data }: GithubCreateIssueResponse = await axios({
-            url: 'https://api.github.com/repos/JakeKo/mega-bot/issues',
-            method: 'POST',
-            headers: {
-                Authorization: `token ${config.GITHUB_API_TOKEN}`
-            },
-            data: {
-                title: description,
-                body: `By: ${author}\n${description}`
-            }
-        });
+// async function createIssue(author, description) {
+//     try {
+//         const { data } = await axios({
+//             url: 'https://api.github.com/repos/JakeKo/mega-bot/issues',
+//             method: 'POST',
+//             headers: {
+//                 Authorization: `token ${config.GITHUB_API_TOKEN}`
+//             },
+//             data: {
+//                 title: description,
+//                 body: `By: ${author}\n${description}`
+//             }
+//         });
 
-        return `Successfully created issue: \`[#${data.number}] ${data.title}\`.\nCheck it out here: ${data.html_url}`;
-    } catch (exception) {
-        console.error(exception);
-        return 'Failed to create issue.';
-    }
-}
+//         return `Successfully created issue: \`[#${data.number}] ${data.title}\`.\nCheck it out here: ${data.html_url}`;
+//     } catch (exception) {
+//         console.error(exception);
+//         return 'Failed to create issue.';
+//     }
+// }
