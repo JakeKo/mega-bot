@@ -1,5 +1,8 @@
 const fs = require('fs');
 const path = require('path');
+const logPath = 'logs/';
+
+
 
 function getLogFileName() {
     const now = new Date();
@@ -7,7 +10,7 @@ function getLogFileName() {
     const month = now.getUTCMonth().toString().padStart(2, '0');
     const date = now.getUTCDate().toString().padStart(2, '0');
 
-    return path.resolve(`./logs/${year}${month}${date}.txt`);
+    return path.resolve(`${logPath}${year}${month}${date}.txt`);
 }
 
 function formatMessage(message) {
@@ -17,6 +20,11 @@ function formatMessage(message) {
 function log(message) {
     const fileName = getLogFileName();
     const formattedMessage = formatMessage(message);
+
+    if (!fs.existsSync(logPath)){
+        fs.mkdirSync(logPath);
+    }
+
     fs.writeFile(fileName, formattedMessage, { flag: 'a+' }, console.error);
 }
 

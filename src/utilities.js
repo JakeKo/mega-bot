@@ -8,7 +8,7 @@ async function getDisplayName(bot, id) {
         const guild = await bot.guilds.cache.first();
         const members = await guild.members.cache;
         members.forEach(m => (displayNames[m.id] = m.displayName));
-        return displayNames[id] ?? 'NO NAME';
+        return displayNames[id] || 'NO NAME';
     }
 }
 
