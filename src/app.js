@@ -1,6 +1,7 @@
 (async () => {
     const Discord = require('discord.js');
     const config = require('../config');
+    const Logger = require('./logger');
 
     const bot = new Discord.Client();
     const store = await require('./store')();
@@ -11,7 +12,7 @@
     const pastabot = require('./bots/pastabot')(bot, store);
 
     // Register bots
-    bot.on('ready', () => console.log(`Logged in as ${bot.user.tag}!`));
+    bot.on('ready', () => { Logger.log(`Logged in as ${bot.user.tag}!`); });
     bot.on('message', megabot);
     // bot.on('message', statbot);
     bot.on('message', pastabot);

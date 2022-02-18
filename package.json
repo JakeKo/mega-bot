@@ -7,7 +7,7 @@
     "lint": "eslint ./src/**/*.js",
     "dev": "npm run lint && cross-env NODE_ENV=development node ./src/app.js",
     "package": "rm -rf ./build && mkdir -p build && babel ./src/ -d ./build/src && cp ./package.json ./build && cp ./package-lock.json ./build",
-    "config:prod": "cross-env NODE_ENV=production node ./updateConfig.js",
+    "config:prod": "cross-env NODE_ENV=production node ./scripts/updateConfig.js",
     "start:prod": "cross-env NODE_ENV=production forever start ./src/app.js",
     "stop:prod": "forever stop ./src/app.js",
     "start:prod-manual": "cross-env NODE_ENV=production node ./src/app.js"
