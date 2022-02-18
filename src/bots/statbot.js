@@ -1,6 +1,8 @@
 const { getDisplayNames, cacheDisplayNames } = require('../utilities');
+const Logger = require('../logger');
 
 module.exports = (bot, store) => async message => {
+    const stats = /^!stats/;
     const statsHelp = /^!stats +help/;
     const statsStatus = /^!stats +status/;
     const statsReacts = /^!stats +reacts(.*)/;
@@ -8,6 +10,12 @@ module.exports = (bot, store) => async message => {
     const statsSupportive = /^!stats +supportive(.*)/;
     
     await cacheDisplayNames(bot);
+
+    if (!stats.test(message.content)) {
+        return;
+    }
+
+    Logger.log(`Handling '${message.content}' with StatBot`);
 
     // Check if the message matches '!stats help'
     if (statsHelp.test(message.content)) {

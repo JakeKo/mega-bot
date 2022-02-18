@@ -1,5 +1,8 @@
+const Logger = require('../logger');
+
 module.exports = (_, store) => async message => {
     const keys = (await store.getPastas()).map(pasta => pasta.key);
+    const pasta = /^!pasta/;
     const pastaHelp = /^!pasta +help/;
     const pastaAdd = /^!pasta +add +(\S+)(.*)/;
     const pastaRemove = /^!pasta +remove +(\S+)/;
@@ -7,6 +10,12 @@ module.exports = (_, store) => async message => {
     const pastaArgs = /^!pasta +args +(\S+)/;
     const pastaSearch = /^!pasta +(\S+)(.*)/;
     const keywords = ['add', 'help', 'remove', 'list', 'args'];
+
+    if (!pasta.test(message.content)) {
+        return;
+    }
+
+    Logger.log(`Handling '${message.content}' with PastaBot`);
 
     // Check if the message matches '!pasta help'
     if (pastaHelp.test(message.content)) {

@@ -1,14 +1,21 @@
 // const axios = require('axios').default;
 // const config = require('../../config');
-// const { getDisplayNames, cacheDisplayNames } = require('../utilities');
+const { getDisplayName } = require('../utilities');
+const Logger = require('../logger');
 
-module.exports = () => async (message) => {
+module.exports = (bot) => async (message) => {
+    const mega = /^!mega/;
     const megaContribute = /^!mega +contribute/;
     const megaLinks = /^!mega +links/;
     // const megaRequest = /^!mega +request +(.*)/;
     const megaHelp = /^!mega +help/;
+    const megaDebug = /^!mega +debug/;
 
-    // await cacheDisplayNames(bot);
+    if (!mega.test(message.content)) {
+        return;
+    }
+
+    Logger.log(`Handling '${message.content}' with MegaBot`);
 
     // Check if the message matches '!mega contribute'
     if (megaContribute.test(message.content)) {
@@ -44,6 +51,11 @@ module.exports = () => async (message) => {
             '`!pasta help`: View usage instructions for Pasta Bot.',
             '`!stats help`: View usage instructions for Stat Bot. _Down for maintenance_',
         ].join('\n'));
+    }
+
+    else if (megaDebug.test(message.content)) {
+        const displayName = await getDisplayName(bot, message.author.id);
+        message.channel.send(displayName);
     }
 };
 

@@ -11,7 +11,7 @@ function getLogFileName() {
 }
 
 function formatMessage(message) {
-    return `${(new Date()).toISOString()} | ${message}`;
+    return `${(new Date()).toISOString()} | ${message}\n`;
 }
 
 function log(message) {
