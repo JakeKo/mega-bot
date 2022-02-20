@@ -5,10 +5,9 @@ async function getDisplayName(bot, id) {
     if (displayNames[id]) {
         return displayNames[id];
     } else {
-        const guild = await bot.guilds.cache.first();
-        const members = await guild.members.cache;
-        members.forEach(m => (displayNames[m.id] = m.displayName));
-        return displayNames[id] || 'NO NAME';
+        const member = await bot.guilds.cache.first().members.fetch(id);
+        displayNames[id] = member.displayName;
+        return displayNames[id];
     }
 }
 
@@ -21,7 +20,22 @@ async function getDisplayNames(bot, ...ids) {
     return Object.fromEntries(nameEntries);
 }
 
+function getArgs(s) {
+    const [lastMatch, ...matches] = [...s.matchAll(/& *(\S+)([^&]+)/g)].reverse()
+        .map(m => [m[1], m[2].trim()]);
+
+    // Construct the map of args from the regex matches
+    // The last match is treated differently since the body could follow it
+    // So we slice the last arg to the first space
+    const argObject = Object.fromEntries(matches);
+    const [lastArg, ...body] = lastMatch[1].split(' ');
+    argObject[lastMatch[0]] = lastArg;
+
+    return { args: argObject, body: body.join(' ') };
+}
+
 module.exports = {
     getDisplayName,
-    getDisplayNames
+    getDisplayNames,
+    getArgs
 };

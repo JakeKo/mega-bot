@@ -1,7 +1,7 @@
 const Client = require('ssh2-sftp-client');
 const config = require('../config');
 
-const localConfigPath = '../config.js';
+const localConfigPath = './config.js';
 const remoteConfigPath = '/root/mega-bot/config.js';
 
 (async () => {

@@ -1,13 +1,13 @@
-// const axios = require('axios').default;
-// const config = require('../../config');
-const { getDisplayName } = require('../utilities');
+const axios = require('axios').default;
+const config = require('../../config');
+const { getDisplayName, getArgs } = require('../utilities');
 const Logger = require('../logger');
 
 module.exports = (bot) => async (message) => {
     const mega = /^!mega/;
     const megaContribute = /^!mega +contribute/;
     const megaLinks = /^!mega +links/;
-    // const megaRequest = /^!mega +request +(.*)/;
+    const megaRequest = /^!mega +request +(.*)/;
     const megaHelp = /^!mega +help/;
     const megaDebug = /^!mega +debug/;
 
@@ -34,11 +34,14 @@ module.exports = (bot) => async (message) => {
     }
 
     // Check if the message matches '!mega request'
-    // else if (megaRequest.test(message.content)) {
-    //     const [, description] = message.content.match(megaRequest);
-    //     const result = await createIssue(getDisplayNames()[message.author.id], description);
-    //     message.channel.send(result);
-    // }
+    else if (megaRequest.test(message.content)) {
+        const [, data] = message.content.match(megaRequest);
+        const { args, body } = getArgs(data);
+        const discordName = await getDisplayName(bot, message.author.id);
+
+        const result = await createIssue(discordName, body, args['gh']);
+        message.channel.send(result);
+    }
 
     // Check if the message matches '!mega help'
     else if (megaHelp.test(message.content)) {
@@ -59,23 +62,23 @@ module.exports = (bot) => async (message) => {
     }
 };
 
-// async function createIssue(author, description) {
-//     try {
-//         const { data } = await axios({
-//             url: 'https://api.github.com/repos/JakeKo/mega-bot/issues',
-//             method: 'POST',
-//             headers: {
-//                 Authorization: `token ${config.GITHUB_API_TOKEN}`
-//             },
-//             data: {
-//                 title: description,
-//                 body: `By: ${author}\n${description}`
-//             }
-//         });
+async function createIssue(author, description, ghName) {
+    try {
+        const { data } = await axios({
+            url: 'https://api.github.com/repos/JakeKo/mega-bot/issues',
+            method: 'POST',
+            headers: {
+                Authorization: `token ${config.GITHUB_API_TOKEN}`
+            },
+            data: {
+                title: description,
+                body: `By: ${author}${ghName ? ` [ @${ghName} ]` : ''}\n${description}`
+            }
+        });
 
-//         return `Successfully created issue: \`[#${data.number}] ${data.title}\`.\nCheck it out here: ${data.html_url}`;
-//     } catch (exception) {
-//         console.error(exception);
-//         return 'Failed to create issue.';
-//     }
-// }
+        return `Successfully created issue: \`[#${data.number}] ${data.title}\`.\nCheck it out here: ${data.html_url}`;
+    } catch (exception) {
+        console.error(exception);
+        return 'Failed to create issue.';
+    }
+}
