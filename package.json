@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/JakeKo/mega-bot#readme",
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.2",
     "cross-env": "^7.0.2",
     "discord.js": "^12.5.3",
     "mongodb": "^3.6.1"
