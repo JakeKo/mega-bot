@@ -49,10 +49,10 @@ module.exports = (bot) => async (message) => {
             '**Usage Intstructions for Mega Bot:**',
             '>>> `!mega contribute`: Learn about how to contribute to Mega Bot.',
             '`!mega links`: View a list of helpful links.',
-            '`!mega request`: Request a new Mega Bot feature. _Down for maintenance_',
+            '`!mega request`: Request a new Mega Bot feature.',
             '`!mega help`: View usage instructions for Mega Bot.',
             '`!pasta help`: View usage instructions for Pasta Bot.',
-            '`!stats help`: View usage instructions for Stat Bot. _Down for maintenance_',
+            '`!stats help`: View usage instructions for Stat Bot.',
         ].join('\n'));
     }
 

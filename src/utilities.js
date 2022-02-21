@@ -20,6 +20,12 @@ async function getDisplayNames(bot, ...ids) {
     return Object.fromEntries(nameEntries);
 }
 
+async function getAllDisplayNames(bot) {
+    const members = await bot.guilds.cache.first().members.fetch();
+    members.forEach(m => (displayNames[m.id] = m.displayName));
+    return displayNames;
+}
+
 function getArgs(s) {
     const [lastMatch, ...matches] = [...s.matchAll(/& *(\S+)([^&]+)/g)].reverse()
         .map(m => [m[1], m[2].trim()]);
@@ -37,5 +43,6 @@ function getArgs(s) {
 module.exports = {
     getDisplayName,
     getDisplayNames,
+    getAllDisplayNames,
     getArgs
 };
