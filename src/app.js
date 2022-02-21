@@ -20,6 +20,6 @@
     await bot.login(config.DISCORD_BOT_TOKEN);
 
     // Register archiver
-    // const startArchiver = require('./archiver')(bot, store);
-    // setTimeout(startArchiver, 1000 * 5);
+    const startArchiver = require('./archiver')(bot, store);
+    setTimeout(startArchiver, 1000 * 5);
 })();
