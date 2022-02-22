@@ -9,6 +9,7 @@ module.exports = (bot, store) => async message => {
     const statsReacts = /^!stats +reacts(.*)/;
     const statsPopular = /^!stats +popular(.*)/;
     const statsSupportive = /^!stats +supportive(.*)/;
+    const statsMessage = /^!stats +message(.*)/;
 
     if (!stats.test(message.content)) {
         return;
@@ -20,10 +21,12 @@ module.exports = (bot, store) => async message => {
     if (statsHelp.test(message.content)) {
         message.channel.send([
             '**Usage Intstructions for Stat Bot:**',
+            '__Use plain text to search users. Do not mention directly.__',
             '>>> `!stats help`: View usage instructions for Stat Bot.',
-            '`!stats reacts [?user]`: View the most popular reacts (of the optional user). Use plain text to search users. Do not mention directly.',
-            '`!stats popular [?user]`: View the most popular users (of the optional user). Use plain text to search users. Do not mention directly.',
-            '`!stats supportive [?user]`: View the most supportive users (of the optional user). Use plain text to search users. Do not mention directly.',
+            '`!stats reacts [?user]`: View the most popular reacts (of the optional user). ',
+            '`!stats popular [?user]`: View the most popular users (of the optional user).',
+            '`!stats supportive [?user]`: View the most supportive users (of the optional user).',
+            '`!stats message [?user]`: View the most popular message (according to the optional user).',
             '`!stats status`: View clerical information about Stat Bot.'
         ].join('\n'));
     }
@@ -124,6 +127,36 @@ module.exports = (bot, store) => async message => {
             }
         }
     }
+
+    // Check if the messages matches '!stats message [?user]'
+    else if (statsMessage.test(message.content)) {
+        const [, userQuery] = message.content.match(statsMessage);
+        const messages = await store.getMessages();
+
+        // Check if no user was provided
+        if (userQuery.trim() === '') {
+            const data = modelGlobalMessageData(messages).slice(0, 10);
+            const response = data.length === 0
+                ? 'No data available for the provided command.'
+                : await plotGlobalMessageData(data);
+            
+            message.channel.send(response);
+        } else {
+            const result = await evaluateUserQuery(bot, userQuery);
+
+            if (result.success) {
+                const data = modelIndividualMessageData(messages, result.user).slice(0, 10);
+                const displayName = await getDisplayName(bot, result.user);
+                const response = data.length === 0
+                    ? 'No data available for the provided command.'
+                    : await plotIndividualMessageData(data, displayName);
+                
+                message.channel.send(response);
+            } else {
+                message.channel.send(result.message);
+            }
+        }
+    }
 };
 
 // INDIVIDUAL REACT POPULARITY DATA
@@ -193,6 +226,18 @@ function modelGlobalSupportiveData(messages) {
     });
 
     return Object.entries(support).sort((a, b) => a[1] >= b[1] ? -1 : 1);
+}
+
+// INDIVIDUAL MESSAGE DATA
+function modelIndividualMessageData(messages, user) {
+    const entries = messages.map(m => [m.id, m.reacts.filter(r => r.user === user).length]);
+    return entries.sort((a, b) => a[1] >= b[1] ? -1 : 1);
+}
+
+// GLOBAL MESSAGE DATA
+function modelGlobalMessageData(messages) {
+    const entries = messages.map(m => [m.id, m.reacts.length]);
+    return entries.sort((a, b) => a[1] >= b[1] ? -1 : 1);
 }
 
 function plotIndividualReactPopularityData(entries, user) {
@@ -269,4 +314,26 @@ async function plotGlobalSupportiveData(bot, data) {
     entries = entries.map(([key, value]) => [`\`${key.padStart(maxKeyLength, ' ')}\``, value]);
 
     return barPlot(label, entries);
+}
+
+function plotIndividualMessageData(entries, user) {
+    const label = [
+        `**Most Popular Messages According to ${user}:**`,
+        '**Jump to message with `https://discord.com/channels/{guildId}/{channelId}/{messageId}`. I can\'t embed links :(**',
+        ''
+    ].join('\n');
+
+    const newEntries = entries.map(([key, value]) => [`\`${key}\``, value]);
+    return barPlot(label, newEntries);
+}
+
+function plotGlobalMessageData(entries) {
+    const label = [
+        '**Most Popular Messages:**',
+        '**Jump to message with `https://discord.com/channels/{guildId}/{channelId}/{messageId}`. I can\'t embed links :(**',
+        ''
+    ].join('\n');
+
+    const newEntries = entries.map(([key, value]) => [`\`${key}\``, value]);
+    return barPlot(label, newEntries);
 }
