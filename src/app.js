@@ -2,6 +2,7 @@
     const Discord = require('discord.js');
     const config = require('../config');
     const Logger = require('./logger');
+    const { initArchiver, startArchiver } = require('./archiver');
 
     const bot = new Discord.Client();
     const store = await require('./store')();
@@ -19,7 +20,7 @@
 
     await bot.login(config.DISCORD_BOT_TOKEN);
 
-    // Register archiver
-    const startArchiver = require('./archiver')(bot, store);
-    setTimeout(startArchiver, 1000 * 5);
+    // Register archiver - it is delayed so the Mongo connection finishes
+    initArchiver(bot, store);
+    setTimeout(startArchiver, 1000);
 })();

@@ -1,6 +1,7 @@
 const { getDisplayName, flattenEntries, barPlot, evaluateUserQuery } = require('../utilities');
 const Logger = require('../logger');
 const config = require('../../config');
+const { archiverTimestamp, startArchiver } = require('../archiver');
 
 module.exports = (bot, store) => async message => {
     const stats = /^!stats/;
@@ -13,6 +14,11 @@ module.exports = (bot, store) => async message => {
 
     if (!stats.test(message.content)) {
         return;
+    }
+
+    // Restart archiver if someone asked for stats and the archiver hasn't run in a minute
+    if (Date.now() - archiverTimestamp() > 60 * 1000) {
+        startArchiver();
     }
 
     Logger.log(`Handling '${message.content}' with StatBot`);

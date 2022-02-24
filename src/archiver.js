@@ -1,5 +1,7 @@
 const config = require('../config');
-const Logger = require('./logger');
+const Logger = require('../src/logger');
+
+let archiver, interval, timestamp;
 
 // Simplify the message model for archiving
 function modelMessagesForStorage(rawMessages) {
@@ -25,30 +27,45 @@ function modelMessagesForStorage(rawMessages) {
     return Promise.all(messages);
 }
 
-let archiveCounter = 0;
-module.exports = function archive(bot, store) {
-    return async () => {
-        Logger.log(`BEGIN ARCHIVE RUN ${++archiveCounter}`);
-
+function initArchiver(bot, store) {
+    archiver = async () => {
         const guild = bot.guilds.cache.first();
         const channel = guild.channels.resolve(config.STATBOT_CHANNEL_ID);
         const mostRecentMessageId = channel.lastMessageID;
-        let lastIngestedMessageId = (await store.getLastMessage()).id;
+        let lastIngestedMessage = await store.getLastMessage();
+        
+        Logger.log('Archiving messages');
 
-        while (lastIngestedMessageId !== mostRecentMessageId) {
+        while (lastIngestedMessage.id !== mostRecentMessageId) {
             // Fetch messages (limit 100) after lastIngestedMessageId
-            const fetchOptions = { limit: 100, after: lastIngestedMessageId };
+            const fetchOptions = { limit: 100, after: lastIngestedMessage.id };
             const rawMessages = (await channel.messages.fetch(fetchOptions)).array();
             const messages = await modelMessagesForStorage(rawMessages);
 
             // Archive the modeled messages and update lastIngestedMessageId
             await store.archiveMessages(messages.sort((a, b) => a.timestamp < b.timestamp ? -1 : 1));
-            lastIngestedMessageId = (await store.getLastMessage()).id;
+            lastIngestedMessage = await store.getLastMessage();
 
             Logger.log(`Archived ${messages.length} messages`);
         }
 
-        Logger.log(`END ARCHIVE RUN ${archiveCounter}`);
-        setTimeout(archive(bot, store), 1000 * 60 * 60);
+        timestamp = lastIngestedMessage.timestamp;
     };
+}
+
+function startArchiver() {
+    if (interval) {
+        clearInterval(interval);
+    }
+
+    if (archiver) {
+        archiver();
+        interval = setInterval(archiver, 1000 * 60 * 60 * 6);
+    }
+}
+
+module.exports = {
+    initArchiver,
+    startArchiver,
+    archiverTimestamp: () => timestamp
 };
